@@ -4,8 +4,9 @@ from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 import uuid
 from ..config.database import Base
+from .base import DualIdMixin
 
-class Document(Base):
+class Document(DualIdMixin, Base):
     """
     Unified document/file storage with ownership and metadata.
 
@@ -15,11 +16,12 @@ class Document(Base):
 
     Supports both organizational (multi-tenant) and non-organizational usage.
     Includes file storage metadata, versioning, summaries, topics, and graph relationships.
+    
+    Uses dual ID pattern:
+    - uuid: UUID primary key for internal use and FK relationships
+    - id: 8-character string for UI display
     """
     __tablename__ = 'documents'
-
-    # Primary Key
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
 
     # Core Identification Fields
     title = Column(Text, nullable=False)
@@ -29,8 +31,8 @@ class Document(Base):
     content = Column(Text, nullable=True)  # Made nullable for binary file support
 
     # Ownership & Organization (both nullable for flexibility)
-    owner_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
-    org_id = Column(UUID(as_uuid=True), ForeignKey('organizations.id', ondelete='CASCADE'), nullable=True)  # Nullable for non-org
+    owner_uuid = Column(UUID(as_uuid=True), ForeignKey('users.uuid', ondelete='CASCADE'), nullable=False)
+    org_uuid = Column(UUID(as_uuid=True), ForeignKey('organizations.uuid', ondelete='CASCADE'), nullable=True)  # Nullable for non-org
 
     # File Storage Metadata (from market-ui)
     file_path = Column(Text, nullable=False)  # Physical/cloud storage path
@@ -72,9 +74,19 @@ class Document(Base):
     graph_relationships = Column(JSON)  # Legacy graph relationships
 
     # Graph Management (from market-ui)
-    default_visibility_profile_id = Column(UUID(as_uuid=True), ForeignKey('visibility_profiles.id'))
+    default_visibility_profile_uuid = Column(UUID(as_uuid=True), ForeignKey('visibility_profiles.uuid'))
     entities_last_updated = Column(DateTime(timezone=True))
     relationships_last_updated = Column(DateTime(timezone=True))
+
+    # Processing Status Flags (for quick filtering)
+    has_summary = Column(Boolean, nullable=False, default=False)
+    has_graph = Column(Boolean, nullable=False, default=False)
+    has_versions = Column(Boolean, nullable=False, default=False)
+
+    # Extraction Metadata
+    extraction_started_at = Column(DateTime(timezone=True))
+    extraction_completed_at = Column(DateTime(timezone=True))
+    extraction_error = Column(Text)
 
     # Metadata
     document_metadata = Column(JSONB, name='metadata')
@@ -93,10 +105,10 @@ class Document(Base):
     graph_relationships_rel = relationship("GraphRelationship", back_populates="document", foreign_keys="GraphRelationship.document_id", lazy="dynamic", cascade="all, delete-orphan")
 
     # From market-ui
-    collections = relationship("Collection", secondary="document_collection_association", back_populates="documents", lazy="dynamic")
-    graph_entities = relationship("GraphEntity", back_populates="source_file", lazy="dynamic", foreign_keys="GraphEntity.source_file_id")
+    collections = relationship("Collection", secondary="file_collection_association", back_populates="documents", lazy="dynamic")
+    graph_entities = relationship("GraphEntity", back_populates="source_file", lazy="dynamic", foreign_keys="GraphEntity.source_file_uuid")
     collection_contexts = relationship("DocumentCollectionContext", back_populates="document", lazy="dynamic", cascade="all, delete-orphan")
-    default_visibility_profile = relationship("VisibilityProfile", foreign_keys=[default_visibility_profile_id])
+    default_visibility_profile = relationship("VisibilityProfile", foreign_keys=[default_visibility_profile_uuid])
 
     # Table Constraints
     __table_args__ = (
@@ -120,22 +132,19 @@ class Document(Base):
     )
 
     def __repr__(self):
-        return f"<Document(id={self.id}, title='{self.title}', version={self.version})>"
+        return f"<Document(uuid={self.uuid}, id='{self.id}', title='{self.title}', version={self.version})>"
 
-class DocumentVersion(Base):
+class DocumentVersion(DualIdMixin, Base):
     """Historical versions of documents for version control."""
     __tablename__ = 'document_versions'
 
-    # Primary Key
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-
     # Core Fields
-    document_id = Column(UUID(as_uuid=True), ForeignKey('documents.id', ondelete='CASCADE'), nullable=False)
+    document_uuid = Column(UUID(as_uuid=True), ForeignKey('documents.uuid', ondelete='CASCADE'), nullable=False)
     version = Column(Integer, nullable=False)
     content = Column(Text, nullable=False)
     title = Column(Text, nullable=False)
     status = Column(String(20), nullable=False)
-    created_by_id = Column(UUID(as_uuid=True), ForeignKey('users.id'), nullable=False)
+    created_by_uuid = Column(UUID(as_uuid=True), ForeignKey('users.uuid'), nullable=False)
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
     change_description = Column(Text)
     doc_metadata = Column(JSON)
@@ -154,4 +163,4 @@ class DocumentVersion(Base):
     )
 
     def __repr__(self):
-        return f"<DocumentVersion(document_id={self.document_id}, version={self.version})>"
+        return f"<DocumentVersion(uuid={self.uuid}, id='{self.id}', document_uuid={self.document_uuid}, version={self.version})>"

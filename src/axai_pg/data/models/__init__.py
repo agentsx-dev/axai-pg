@@ -5,13 +5,13 @@ from typing import List, Optional
 from ..config.database import Base
 
 # Import all models for easy access
+from .base import BaseModel, DualIdMixin
 from .organization import Organization
 from .user import User
 from .document import Document, DocumentVersion
 from .summary import Summary
 from .graph import GraphEntity, GraphRelationship, SourceType
 from .topic import Topic, DocumentTopic
-from .base import BaseModel
 from .security import (
     Role,
     UserRole,
@@ -24,6 +24,8 @@ from .collection import (
     Collection,
     CollectionEntity,
     CollectionRelationship,
+    CollectionEntitySource,
+    CollectionRelationshipSource,
     EntityLink,
     EntityOperation,
     DocumentCollectionContext,
@@ -36,6 +38,7 @@ from .feedback import Feedback
 __all__ = [
     'Base',
     'BaseModel',
+    'DualIdMixin',
     'User',
     'Organization',
     'Document',
@@ -55,6 +58,8 @@ __all__ = [
     'Collection',
     'CollectionEntity',
     'CollectionRelationship',
+    'CollectionEntitySource',
+    'CollectionRelationshipSource',
     'EntityLink',
     'EntityOperation',
     'OperationType',

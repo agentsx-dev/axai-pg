@@ -218,7 +218,7 @@ Unified document and file storage.
 - `topics_rel` → document_topics (one-to-many, cascade delete)
 - `graph_entities` → graph_entities (one-to-many)
 - `graph_relationships_rel` → graph_relationships (one-to-many)
-- `collections` → collections (many-to-many via document_collection_association)
+- `collections` → collections (many-to-many via file_collection_association)
 - `default_visibility_profile` → visibility_profiles (many-to-one)
 
 ---
@@ -284,7 +284,7 @@ Document grouping and organization.
 **Relationships:**
 - `owner` → users (many-to-one)
 - `organization` → organizations (many-to-one)
-- `documents` → documents (many-to-many via document_collection_association)
+- `documents` → documents (many-to-many via file_collection_association)
 - `collection_entities` → collection_entities (one-to-many, cascade delete)
 - `collection_relationships` → collection_relationships (one-to-many, cascade delete)
 - `entity_operations` → entity_operations (one-to-many, cascade delete)
@@ -712,13 +712,13 @@ Document contexts within collections.
 
 ### Association Tables
 
-#### document_collection_association
+#### file_collection_association
 
 Many-to-many link between documents and collections.
 
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
-| document_id | UUID | PK, FK(documents.id, CASCADE) | Document |
+| file_id | UUID | PK, FK(documents.id, CASCADE) | Document |
 | collection_id | UUID | PK, FK(collections.id, CASCADE) | Collection |
 | added_at | TIMESTAMPTZ | NOT NULL, DEFAULT NOW() | Association timestamp |
 
@@ -833,7 +833,7 @@ erDiagram
 - Index: `idx_documents_owner_id` for fast queries
 
 **Document → Collections (many-to-many)**
-- Via: `document_collection_association` table
+- Via: `file_collection_association` table
 - Cascade delete: When either side deleted, association removed
 
 **Document → Graph Entities**
@@ -941,8 +941,8 @@ def get_collection_entities(session: Session, collection_id: str):
     # Get all file-level entities in collection
     file_entities = session.query(GraphEntity)\
         .join(Document, GraphEntity.source_file_id == Document.id)\
-        .join(document_collection_association)\
-        .filter(document_collection_association.c.collection_id == collection_id)\
+        .join(file_collection_association)\
+        .filter(file_collection_association.c.collection_id == collection_id)\
         .all()
 
     return {

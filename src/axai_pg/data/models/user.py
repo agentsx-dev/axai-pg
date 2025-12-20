@@ -4,8 +4,9 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from ..config.database import Base
+from .base import DualIdMixin
 
-class User(Base):
+class User(DualIdMixin, Base):
     """
     Users can belong to organizations and can own documents.
 
@@ -17,18 +18,19 @@ class User(Base):
     - is_active: Account activation status
     - is_admin: Administrator privileges
     - is_email_verified: Email verification status
+    
+    Uses dual ID pattern:
+    - uuid: UUID primary key for internal use and FK relationships
+    - id: 8-character string for UI display
     """
     __tablename__ = 'users'
-
-    # Primary Key
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
 
     # Core Fields
     username = Column(Text, nullable=False, unique=True)
     email = Column(Text, nullable=False, unique=True)
 
     # Organization (nullable to support non-organizational users from market-ui)
-    org_id = Column(UUID(as_uuid=True), ForeignKey('organizations.id', ondelete='CASCADE'), nullable=True)
+    org_uuid = Column(UUID(as_uuid=True), ForeignKey('organizations.uuid', ondelete='CASCADE'), nullable=True)
 
     # Authentication Fields (from market-ui)
     hashed_password = Column(Text, nullable=True)  # Nullable for external auth providers
@@ -54,8 +56,8 @@ class User(Base):
     roles = relationship(
         "Role",
         secondary="user_roles",
-        primaryjoin="User.id == UserRole.user_id",
-        secondaryjoin="UserRole.role_id == Role.id",
+        primaryjoin="User.uuid == UserRole.user_id",
+        secondaryjoin="UserRole.role_id == Role.uuid",
         viewonly=True,  # Read-only since we use UserRole directly for writes
         lazy="select"
     )
@@ -73,4 +75,4 @@ class User(Base):
     )
 
     def __repr__(self):
-        return f"<User(id={self.id}, username='{self.username}', org_id={self.org_id})>"
+        return f"<User(uuid={self.uuid}, id='{self.id}', username='{self.username}', org_uuid={self.org_uuid})>"
