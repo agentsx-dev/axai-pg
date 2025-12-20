@@ -151,7 +151,7 @@ class CollectionEntity(DualIdMixin, Base):
 
     # Relationships
     collection = relationship("Collection", back_populates="collection_entities")
-    entity_links = relationship("EntityLink", foreign_keys="[EntityLink.collection_entity_id]", back_populates="collection_entity", lazy="dynamic", cascade="all, delete-orphan")
+    entity_links = relationship("EntityLink", foreign_keys="[EntityLink.collection_entity_uuid]", back_populates="collection_entity", lazy="dynamic", cascade="all, delete-orphan")
     source_entities = relationship("GraphEntity", secondary="collection_entity_sources", back_populates="collection_entities_using", lazy="dynamic")
 
     # Table Constraints

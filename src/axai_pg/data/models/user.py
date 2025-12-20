@@ -56,8 +56,8 @@ class User(DualIdMixin, Base):
     roles = relationship(
         "Role",
         secondary="user_roles",
-        primaryjoin="User.uuid == UserRole.user_id",
-        secondaryjoin="UserRole.role_id == Role.uuid",
+        primaryjoin="User.uuid == UserRole.user_uuid",
+        secondaryjoin="UserRole.role_uuid == Role.uuid",
         viewonly=True,  # Read-only since we use UserRole directly for writes
         lazy="select"
     )
@@ -71,7 +71,7 @@ class User(DualIdMixin, Base):
         ),
         Index('idx_users_username', 'username'),
         Index('idx_users_email', 'email'),
-        Index('idx_users_org_id', 'org_id'),
+        Index('idx_users_org_uuid', 'org_uuid'),
     )
 
     def __repr__(self):

@@ -122,11 +122,11 @@ class Document(DualIdMixin, Base):
             "processing_status IN ('pending', 'processing', 'complete', 'error')",
             name="documents_valid_processing_status"
         ),
-        Index('idx_documents_org_id', 'org_id'),
-        Index('idx_documents_owner_id', 'owner_id'),
+        Index('idx_documents_org_uuid', 'org_uuid'),
+        Index('idx_documents_owner_uuid', 'owner_uuid'),
         Index('idx_documents_type', 'document_type'),
         Index('idx_documents_status', 'status'),
-        Index('idx_documents_org_status', 'org_id', 'status'),
+        Index('idx_documents_org_status', 'org_uuid', 'status'),
         Index('idx_documents_is_deleted', 'is_deleted'),
         Index('idx_documents_version_id', 'version_id'),
     )
