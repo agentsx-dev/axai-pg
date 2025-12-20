@@ -46,6 +46,13 @@ class Collection(Base):
     is_graph_generated = Column(Boolean, nullable=False, default=False)
     graph_generated_at = Column(DateTime(timezone=True))
 
+    # Visibility Profile (from market-ui)
+    default_visibility_profile_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey('visibility_profiles.id', ondelete='SET NULL'),
+        nullable=True
+    )
+
     # Timestamps
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
     updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
@@ -60,6 +67,7 @@ class Collection(Base):
     document_contexts = relationship("DocumentCollectionContext", back_populates="collection", lazy="dynamic", cascade="all, delete-orphan")
     graph_entities = relationship("GraphEntity", back_populates="source_collection", lazy="dynamic")
     graph_relationships = relationship("GraphRelationship", back_populates="source_collection", lazy="dynamic")
+    default_visibility_profile = relationship("VisibilityProfile", foreign_keys=[default_visibility_profile_id])
 
     # Hierarchical relationships (from market-ui)
     parent = relationship("Collection", remote_side=[id], back_populates="subcollections")
@@ -73,10 +81,16 @@ class Collection(Base):
         Index('idx_collections_is_graph_generated', 'is_graph_generated'),
         Index('idx_collections_parent_id', 'parent_id'),
         Index('idx_collections_is_deleted', 'is_deleted'),
+        Index('idx_collections_default_visibility_profile_id', 'default_visibility_profile_id'),
     )
 
     def __repr__(self):
         return f"<Collection(id={self.id}, name='{self.name}')>"
+
+    @property
+    def files(self):
+        """Alias for documents relationship - backward compatibility with market-ui."""
+        return self.documents.all()
 
 
 class SourceType(enum.Enum):
@@ -193,9 +207,16 @@ class EntityLink(Base):
     graph_entity_id = Column(UUID(as_uuid=True), ForeignKey('graph_entities.id', ondelete='CASCADE'), nullable=False)
     collection_entity_id = Column(UUID(as_uuid=True), ForeignKey('collection_entities.id', ondelete='CASCADE'), nullable=False)
 
+    # Collection Context (from market-ui)
+    collection_id = Column(UUID(as_uuid=True), ForeignKey('collections.id', ondelete='CASCADE'), nullable=False)
+
     # Link Metadata
     confidence_score = Column(Integer)  # 0-100 confidence in the link
     link_type = Column(Text)  # e.g., "exact_match", "fuzzy_match", "manual"
+
+    # Merge State (from market-ui)
+    is_active = Column(Boolean, nullable=False, default=True)  # Active/inactive state
+    merged_entity_id = Column(UUID(as_uuid=True), ForeignKey('collection_entities.id', ondelete='SET NULL'), nullable=True)  # Result of merge
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
@@ -204,11 +225,15 @@ class EntityLink(Base):
     # Relationships
     graph_entity = relationship("GraphEntity", back_populates="entity_links")
     collection_entity = relationship("CollectionEntity", back_populates="entity_links")
+    collection = relationship("Collection", foreign_keys=[collection_id])
+    merged_entity = relationship("CollectionEntity", foreign_keys=[merged_entity_id])
 
     # Table Constraints
     __table_args__ = (
         Index('idx_entity_links_graph_entity_id', 'graph_entity_id'),
         Index('idx_entity_links_collection_entity_id', 'collection_entity_id'),
+        Index('idx_entity_links_collection_id', 'collection_id'),
+        Index('idx_entity_links_is_active', 'is_active'),
     )
 
     def __repr__(self):
@@ -222,6 +247,12 @@ class OperationType(enum.Enum):
     split = "split"
     deleted = "deleted"
     updated = "updated"
+    # From market-ui graph operations
+    unmerged = "unmerged"
+    link = "link"
+    unlink = "unlink"
+    initialize_graph = "initialize_graph"
+    sync_graph = "sync_graph"
 
 
 class EntityOperation(Base):
@@ -286,6 +317,13 @@ class DocumentCollectionContext(Base):
     context_summary = Column(Text)
     context_metadata = Column(JSON)
 
+    # Visibility Profile (from market-ui)
+    visibility_profile_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey('visibility_profiles.id', ondelete='SET NULL'),
+        nullable=True
+    )
+
     # Timestamps
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
     updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
@@ -293,11 +331,13 @@ class DocumentCollectionContext(Base):
     # Relationships
     document = relationship("Document", back_populates="collection_contexts")
     collection = relationship("Collection", back_populates="document_contexts")
+    visibility_profile = relationship("VisibilityProfile", foreign_keys=[visibility_profile_id])
 
     # Table Constraints
     __table_args__ = (
         Index('idx_document_collection_contexts_document_id', 'document_id'),
         Index('idx_document_collection_contexts_collection_id', 'collection_id'),
+        Index('idx_document_collection_contexts_visibility_profile_id', 'visibility_profile_id'),
     )
 
     def __repr__(self):
