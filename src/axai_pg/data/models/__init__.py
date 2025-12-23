@@ -1,7 +1,3 @@
-from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey, Numeric, JSON, ARRAY
-from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
-from typing import List, Optional
 from ..config.database import Base
 
 # Import all models for easy access

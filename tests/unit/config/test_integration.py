@@ -2,8 +2,9 @@ import pytest
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
-from ..config.database import DatabaseManager, PostgresConnectionConfig, PostgresPoolConfig
-from ..config.environments import Environments
+from sqlalchemy import text
+from axai_pg.data.config.database import DatabaseManager, PostgresConnectionConfig, PostgresPoolConfig
+from axai_pg.data.config.environments import Environments
 
 @pytest.fixture(scope="module")
 def db_manager():
@@ -19,7 +20,7 @@ def test_concurrent_connections(db_manager):
         with db_manager.session_scope() as session:
             # Simulate some work
             time.sleep(0.1)
-            result = session.execute("SELECT pg_sleep(0.1)").scalar()
+            result = session.execute(text("SELECT pg_sleep(0.1)")).scalar()
             return i, result is not None
 
     # Test with 10 concurrent connections
@@ -44,7 +45,7 @@ def test_connection_pool_scaling(db_manager):
     def run_query():
         with db_manager.session_scope() as session:
             time.sleep(0.2)  # Hold connection for 200ms
-            session.execute("SELECT 1").scalar()
+            session.execute(text("SELECT 1")).scalar()
 
     # Create more concurrent connections than base pool size
     threads = []
@@ -72,19 +73,19 @@ def test_connection_error_handling(db_manager):
     with pytest.raises(Exception):
         with db_manager.session_scope() as session:
             # Force a connection error by executing invalid SQL
-            session.execute("SELECT * FROM nonexistent_table")
+            session.execute(text("SELECT * FROM nonexistent_table"))
 
 def test_long_running_transaction(db_manager):
     """Test handling of long-running transactions."""
     with db_manager.session_scope() as session:
         # Start transaction
-        session.execute("SELECT 1")
+        session.execute(text("SELECT 1"))
         
         # Simulate long-running work
         time.sleep(1)
         
         # Verify connection still valid
-        result = session.execute("SELECT 2").scalar()
+        result = session.execute(text("SELECT 2")).scalar()
         assert result == 2
 
 def test_health_check_metrics(db_manager):
@@ -112,28 +113,28 @@ def test_transaction_isolation(db_manager):
     """Test transaction isolation and rollback."""
     # Create a test table
     with db_manager.session_scope() as session:
-        session.execute("""
+        session.execute(text("""
             CREATE TABLE IF NOT EXISTS test_transactions (
                 id SERIAL PRIMARY KEY,
                 value INTEGER
             )
-        """)
+        """))
     
     try:
         # Test transaction rollback
         with pytest.raises(Exception):
             with db_manager.session_scope() as session:
-                session.execute("INSERT INTO test_transactions (value) VALUES (1)")
+                session.execute(text("INSERT INTO test_transactions (value) VALUES (1)"))
                 raise Exception("Forced rollback")
         
         # Verify transaction was rolled back
         with db_manager.session_scope() as session:
             count = session.execute(
-                "SELECT COUNT(*) FROM test_transactions"
+                text("SELECT COUNT(*) FROM test_transactions")
             ).scalar()
             assert count == 0
             
     finally:
         # Cleanup
         with db_manager.session_scope() as session:
-            session.execute("DROP TABLE IF EXISTS test_transactions")
+            session.execute(text("DROP TABLE IF EXISTS test_transactions"))

@@ -3,13 +3,13 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime, timedelta
 from uuid import uuid4, UUID
-from ....config.database import DatabaseManager
-from ...models.document import Document
-from ...models.topic import Topic, DocumentTopic
-from ...models.summary import Summary
-from ..document_repository import DocumentRepository
-from ..repository_factory import RepositoryFactory
-from ..cache_manager import CacheManager
+from axai_pg.data.config.database import DatabaseManager
+from axai_pg.data.models.document import Document
+from axai_pg.data.models.topic import Topic, DocumentTopic
+from axai_pg.data.models.summary import Summary
+from axai_pg.data.repositories.document_repository import DocumentRepository
+from axai_pg.data.repositories.repository_factory import RepositoryFactory
+from axai_pg.data.repositories.cache_manager import CacheManager
 
 @pytest.fixture
 def db_session():

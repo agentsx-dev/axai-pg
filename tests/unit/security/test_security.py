@@ -1,11 +1,11 @@
 import pytest
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
-from ...models.security import UserRole, RolePermission, AccessLog, RateLimit
-from ..security_manager import SecurityManager
-from ..repository_security import SecureRepository, secure_repository
-from ...config.database import DatabaseManager
-from ...models import User, Document
+from axai_pg.data.models.security import UserRole, RolePermission, AuditLog, RateLimit
+from axai_pg.data.security.security_manager import SecurityManager
+from axai_pg.data.security.repository_security import SecureRepository, secure_repository
+from axai_pg.data.config.database import DatabaseManager
+from axai_pg.data.models import User, Document
 
 @pytest.fixture
 def db_session():
@@ -154,7 +154,7 @@ async def test_audit_logging(security_manager, test_user, db_session):
 @pytest.mark.asyncio
 async def test_permission_decorator(test_user, db_session):
     """Test the require_permission decorator."""
-    from ..security_manager import require_permission
+    from axai_pg.data.security.security_manager import require_permission
     
     @require_permission('TEST_PERMISSION')
     async def test_func(user_id, org_id):

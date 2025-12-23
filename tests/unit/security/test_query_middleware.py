@@ -1,9 +1,9 @@
 import pytest
 from sqlalchemy.orm import Session
-from ...models import User, Document
-from ..query_middleware import SecurityQueryMiddleware
-from ..security_config import SecurityConfigFactory
-from ...config.database import DatabaseManager
+from axai_pg.data.models import User, Document
+from axai_pg.data.security.query_middleware import SecurityQueryMiddleware
+from axai_pg.data.security.security_config import SecurityConfigFactory
+from axai_pg.data.config.database import DatabaseManager
 
 @pytest.fixture
 def db_session():
@@ -26,7 +26,7 @@ async def test_user(db_session):
     db_session.commit()
     
     # Add user role and permissions via security manager
-    from ..security_manager import SecurityManager
+    from axai_pg.data.security.security_manager import SecurityManager
     security = SecurityManager.get_instance()
     await security.load_permissions(user.id, user.org_id)
     
@@ -132,7 +132,7 @@ async def test_rate_limiting(security_middleware, db_session, test_user):
     
     # Test exceeding rate limit
     # Add rate limit records via security manager
-    from ..security_manager import SecurityManager
+    from axai_pg.data.security.security_manager import SecurityManager
     security = SecurityManager.get_instance()
     
     # Artificially exceed rate limit

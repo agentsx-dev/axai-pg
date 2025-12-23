@@ -3,10 +3,10 @@ from datetime import datetime, timedelta
 import time
 import logging
 from unittest.mock import MagicMock, patch
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
-from ..monitoring import (
+from axai_pg.data.monitoring import (
     initialize_monitoring,
     MetricsCollector,
     AlertManager,
@@ -14,7 +14,7 @@ from ..monitoring import (
     monitor_repository,
     monitor_query
 )
-from ..config.database import DatabaseManager, PostgresConnectionConfig, PostgresPoolConfig
+from axai_pg.data.config.database import DatabaseManager, PostgresConnectionConfig, PostgresPoolConfig
 
 @pytest.fixture
 def setup_test_db():
@@ -179,7 +179,7 @@ def test_monitoring_integration(setup_test_db, metrics_collector, alert_manager)
     
     # Test query monitoring
     with DatabaseManager.get_instance().session_scope() as session:
-        session.execute("SELECT 1")
+        session.execute(text("SELECT 1"))
     
     metrics = metrics_collector.get_metrics()
     assert "queries" in metrics["metrics"]

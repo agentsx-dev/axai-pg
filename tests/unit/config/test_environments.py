@@ -1,6 +1,6 @@
 import pytest
-from ..config.environments import Environments, EnvironmentConfig
-from ..config.database import PostgresPoolConfig
+from axai_pg.data.config.environments import Environments, EnvironmentConfig
+from axai_pg.data.config.database import PostgresPoolConfig
 
 def test_development_config():
     """Test development environment configuration."""

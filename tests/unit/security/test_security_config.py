@@ -1,6 +1,6 @@
 import pytest
 from datetime import timedelta
-from ..security_config import (
+from axai_pg.data.security.security_config import (
     SecurityConfig,
     SecurityConfigFactory,
     RateLimitConfig,

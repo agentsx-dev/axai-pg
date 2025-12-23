@@ -1,7 +1,7 @@
 import pytest
 import os
-from ..config.settings import Settings, AppSettings
-from ..config.database import PostgresConnectionConfig
+from axai_pg.data.config.settings import Settings, AppSettings
+from axai_pg.data.config.database import PostgresConnectionConfig
 
 @pytest.fixture
 def mock_env_vars(monkeypatch):

@@ -1,7 +1,8 @@
 import pytest
 import os
+from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
-from ..config.database import DatabaseManager, PostgresConnectionConfig, PostgresPoolConfig
+from axai_pg.data.config.database import DatabaseManager, PostgresConnectionConfig, PostgresPoolConfig
 
 @pytest.fixture
 def test_conn_config():
@@ -44,7 +45,7 @@ def test_database_manager_session_scope(test_conn_config, test_pool_config):
     
     with manager.session_scope() as session:
         # Test simple query execution
-        result = session.execute("SELECT 1").scalar()
+        result = session.execute(text("SELECT 1")).scalar()
         assert result == 1
 
 def test_database_manager_health_check(test_conn_config, test_pool_config):
@@ -72,7 +73,7 @@ def test_invalid_connection_handling():
     
     with pytest.raises(SQLAlchemyError):
         with manager.session_scope() as session:
-            session.execute("SELECT 1")
+            session.execute(text("SELECT 1"))
 
 def test_connection_pool_configuration(test_conn_config):
     """Test that pool configuration is properly applied."""

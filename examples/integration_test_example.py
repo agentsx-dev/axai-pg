@@ -209,46 +209,37 @@ def test_with_multiple_operations(axai_db_session):
 # Example 4: Custom Test Configuration
 # =============================================================================
 
-def test_with_custom_schema_file():
+def test_with_sqlalchemy_schema():
     """
-    Example: Using custom schema file for specialized testing.
+    Example: Using SQLAlchemy models for schema creation.
 
-    Useful when you need a modified schema for specific tests.
+    Schema is created programmatically from SQLAlchemy models.
     """
     conn_config = PostgresConnectionConfig(
         host=os.getenv('POSTGRES_HOST', 'localhost'),
         port=int(os.getenv('POSTGRES_PORT', '5432')),
-        database='test_custom_schema',
+        database='test_sqlalchemy_schema',
         username=os.getenv('POSTGRES_USER', 'test_user'),
         password=os.getenv('POSTGRES_PASSWORD', 'test_password'),
     )
 
-    # Note: This example assumes you have a custom schema file
-    # If not, it will use the default schema
-    custom_schema_path = os.path.join(
-        os.path.dirname(__file__),
-        '..',
-        'sql',
-        'schema',
-        'schema.sql'
-    )
-
     db_config = DatabaseInitializerConfig(
         connection_config=conn_config,
-        schema_file=custom_schema_path,
         auto_create_db=True,
         auto_drop_on_exit=True,
     )
 
     with DatabaseInitializer(db_config) as db_init:
+        # Schema is created from SQLAlchemy models automatically
         assert db_init.setup_database()
 
         with db_init.session_scope() as session:
+            from sqlalchemy import text
             # Verify schema was applied
-            result = session.execute("SELECT 1")
+            result = session.execute(text("SELECT 1"))
             assert result.scalar() == 1
 
-        print("✓ Custom schema test completed")
+        print("✓ SQLAlchemy schema test completed")
 
 
 # =============================================================================
@@ -316,7 +307,7 @@ if __name__ == "__main__":
     try:
         test_programmatic_with_context_manager()
         test_manual_lifecycle()
-        test_with_custom_schema_file()
+        test_with_sqlalchemy_schema()
         test_database_reset()
 
         print("\n✅ All non-pytest examples completed successfully!")

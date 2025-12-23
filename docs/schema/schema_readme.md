@@ -29,17 +29,41 @@ This document outlines the PostgreSQL database schema designed for the document 
 
 ## Tables Overview
 
+### Core Tables
 1. **organizations**: Tenant companies in the B2B system
 2. **users**: Users belonging to organizations
 3. **documents**: Core document storage with metadata
 4. **document_versions**: Historical versions of documents
+
+### Content Analysis
 5. **summaries**: Document summaries with tool attribution
-6. **graph_nodes**: Nodes in the document relationship graph
-7. **graph_relationships**: Relationships between nodes
-8. **topics**: Document topics/categories
-9. **document_topics**: Junction table linking documents to topics
-10. **document_clusters**: Clusters of related documents
-11. **document_cluster_members**: Junction table linking documents to clusters
+6. **topics**: Document topics/categories
+7. **document_topics**: Junction table linking documents to topics
+8. **feedback**: User feedback records
+
+### Graph Structure
+9. **graph_entities**: Nodes in the document relationship graph
+10. **graph_relationships**: Relationships between graph entities
+
+### Collections
+11. **collections**: Document collections with hierarchical support
+12. **collection_entities**: Entities within collections
+13. **collection_relationships**: Relationships within collections
+14. **collection_entity_sources**: Junction for collection entity sources
+15. **collection_relationship_sources**: Junction for collection relationship sources
+16. **entity_links**: Links between entities
+17. **entity_operations**: Operation history for entities
+18. **document_collection_contexts**: Document contexts within collections
+19. **visibility_profiles**: Visibility settings for collections
+
+### Security
+20. **roles**: User roles for access control
+21. **user_roles**: Junction table linking users to roles
+22. **role_permissions**: Permissions assigned to roles
+23. **audit_logs**: Audit trail for security events
+24. **rate_limits**: Rate limiting records
+25. **security_policies**: Security policy configurations
+26. **tokens**: Authentication tokens (JWT)
 
 ## Query Patterns Supported
 
