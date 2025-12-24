@@ -23,20 +23,20 @@ dependencies = [
 packages = ["src/axai_pg"]
 
 [tool.hatch.envs.default]
-python = "3.8"
+python = "3.10"
 
 [tool.hatch.envs.dev]
-python = "3.8"
+python = "3.10"
 features = ["dev"]
 
 [tool.hatch.envs.test]
-python = "3.8"
+python = "3.10"
 features = ["test"]
 
 [tool.hatch.envs.lint]
-python = "3.8"
+python = "3.10"
 features = ["lint"]
 
 [tool.hatch.envs.types]
-python = "3.8"
+python = "3.10"
 features = ["types"] 

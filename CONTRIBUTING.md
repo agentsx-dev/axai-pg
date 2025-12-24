@@ -15,7 +15,7 @@ Thank you for your interest in contributing to the AXAI PostgreSQL Models projec
 
 ### Prerequisites
 
-- Python >= 3.8
+- Python >= 3.10
 - PostgreSQL 12 or later
 - Docker and Docker Compose (for testing)
 - Git

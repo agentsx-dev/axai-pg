@@ -18,7 +18,7 @@ class Token(Base):
 
     # Core Fields
     token_type = Column(Text, nullable=False)
-    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    user_uuid = Column(UUID(as_uuid=True), ForeignKey('users.uuid', ondelete='CASCADE'), nullable=False)
 
     # Token Lifecycle
     expires_at = Column(DateTime(timezone=True), nullable=False)
@@ -32,10 +32,10 @@ class Token(Base):
     __table_args__ = (
         CheckConstraint("length(trim(id)) > 0", name="tokens_id_not_empty"),
         CheckConstraint("length(trim(token_type)) > 0", name="tokens_token_type_not_empty"),
-        Index('idx_tokens_user_id', 'user_id'),
+        Index('idx_tokens_user_uuid', 'user_uuid'),
         Index('idx_tokens_expires_at', 'expires_at'),
         Index('idx_tokens_is_revoked', 'is_revoked'),
     )
 
     def __repr__(self):
-        return f"<Token(id='{self.id}', user_id={self.user_id}, token_type='{self.token_type}')>"
+        return f"<Token(id='{self.id}', user_uuid={self.user_uuid}, token_type='{self.token_type}')>"

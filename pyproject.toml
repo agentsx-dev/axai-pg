@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "axai-pg"
-version = "0.4.0"
+version = "0.6.0"
 description = "PostgreSQL models and database management for AXAI applications"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -80,7 +80,7 @@ exclude_lines = [
 
 [tool.black]
 line-length = 88
-target-version = ["py38"]
+target-version = ["py310"]
 
 [tool.isort]
 profile = "black"

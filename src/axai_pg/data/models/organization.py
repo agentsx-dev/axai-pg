@@ -4,18 +4,20 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from ..config.database import Base
+from .base import DualIdMixin
 
-class Organization(Base):
+class Organization(DualIdMixin, Base):
     """
     Organizations represent B2B tenants in the multi-tenant system.
 
     Each organization is a separate tenant with its own users and documents.
     This model implements multi-tenancy at the organization level.
+    
+    Uses dual ID pattern:
+    - uuid: UUID primary key for internal use and FK relationships
+    - id: 8-character string for UI display
     """
     __tablename__ = 'organizations'
-
-    # Primary Key
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
 
     # Core Fields
     name = Column(Text, nullable=False)
@@ -34,4 +36,4 @@ class Organization(Base):
     )
 
     def __repr__(self):
-        return f"<Organization(id={self.id}, name='{self.name}')>"
+        return f"<Organization(uuid={self.uuid}, id='{self.id}', name='{self.name}')>"

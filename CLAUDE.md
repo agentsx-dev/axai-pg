@@ -143,21 +143,6 @@ The system implements B2B multi-tenancy with organization-level isolation:
 - Foreign key constraints enforce data integrity
 - Users can only access data within their organization
 
-### Migration System
-
-Uses Sqitch for database change management:
-- **Deploy scripts**: Forward migrations (`migrations/deploy/`)
-- **Revert scripts**: Rollback migrations (`migrations/revert/`)
-- **Verify scripts**: Validation checks (`migrations/verify/`)
-
-Naming convention: `YYYYMMDD_NNNN_description.sql`
-
-All migrations must be:
-- Reversible
-- Tested in staging before production
-- Documented with performance impact analysis
-- Backward compatible when possible
-
 ### Testing Strategy
 
 **SQLAlchemy-First Integration Testing:**
@@ -193,16 +178,9 @@ All tests use a real PostgreSQL database with no mocks. The schema is created pr
 **Transaction Isolation:**
 Each test runs in a transaction that is rolled back after completion, ensuring tests don't affect each other and run quickly.
 
-### TypeScript Legacy
-
-Some TypeScript files remain in the codebase (e.g., `PostgresDocumentRepository.ts`, `DataAccessFactory.ts`). These are legacy files from the migration and should eventually be removed. When working on repository or data access code, prefer the Python implementations in `src/axai_pg/`.
-
 ## Key Design Decisions
 
-### 1. Migration from TypeScript to Python
-The project was migrated from TypeScript/Node.js to Python/SQLAlchemy. When you encounter TypeScript files in the data layer, they are legacy artifacts.
-
-### 2. Repository Pattern Over Direct ORM
+### 1. Repository Pattern Over Direct ORM
 Access to models goes through repository layer to enable:
 - Caching with automatic invalidation
 - Metrics collection
@@ -221,7 +199,7 @@ All tests use real PostgreSQL (not mocks) to ensure:
 - Transaction behavior correctness
 - Extension functionality (uuid-ossp)
 
-The old SQL files in `sql/schema/` are deprecated and kept only for reference. Schema creation is done exclusively through SQLAlchemy models.
+Schema creation is done exclusively through SQLAlchemy models.
 
 ### 4. UUID Primary Keys
 All entities use UUIDs instead of auto-incrementing integers for:
@@ -237,13 +215,10 @@ Documents have a `metadata` JSONB column for extensible attributes without schem
 ### Making Changes to Models
 
 1. Update the model class in `src/axai_pg/data/models/`
-2. Create a Sqitch migration in `migrations/deploy/`
-3. Create corresponding revert script in `migrations/revert/`
-4. Create verify script in `migrations/verify/`
-5. Test migration locally: `sqitch deploy` and `sqitch revert`
-6. Update repository layer if needed
-7. Write tests in `tests/integration/`
-8. Update documentation
+2. Run integration tests to verify schema: `pytest tests/integration/test_schema_creation.py -v --integration`
+3. Update repository layer if needed
+4. Write tests in `tests/integration/`
+5. Update documentation
 
 ### Adding New Repository Methods
 
@@ -314,13 +289,11 @@ All tables include:
 - JSONB columns for flexible metadata
 - Table comments for documentation
 
-### Migration from SQL Files
+### Schema Management
 
-The SQL files in `sql/schema/` are **deprecated** and kept only for reference. All schema management is done through SQLAlchemy models and PostgreSQLSchemaBuilder.
-
-**Do not modify SQL files.** Instead:
+All schema management is done through SQLAlchemy models and PostgreSQLSchemaBuilder:
 1. Update SQLAlchemy models in `src/axai_pg/data/models/`
-2. Schema is automatically updated via PostgreSQLSchemaBuilder
+2. Schema is automatically created via PostgreSQLSchemaBuilder
 3. Test changes with integration tests
 
 ### Testing Schema Changes
@@ -383,11 +356,10 @@ Configure via `.env` or `.env.test`:
 - Audit logging for sensitive operations
 
 ### Schema Changes
-- Use Sqitch migrations (not Alembic)
-- Test migrations in both directions (deploy and revert)
+- Update SQLAlchemy models directly
+- Test with integration tests before deploying
 - Consider performance impact on large tables
-- Batch large data migrations
-- Maintain backward compatibility
+- Maintain backward compatibility when possible
 
 ### Testing
 - Write integration tests for all repository methods
@@ -403,9 +375,6 @@ Call `DatabaseManager.initialize(conn_config)` before using repositories or mode
 
 ### Test database not available
 Ensure PostgreSQL container is running: `docker-compose -f docker-compose.standalone-test.yml up -d` or `./run_tests.sh`
-
-### Migration conflicts
-Use sequential versioning with date prefix to avoid conflicts. If conflict occurs, rebase migrations with new version numbers.
 
 ### Import errors
 Ensure `PYTHONPATH` includes `src` directory. The package uses namespace structure with `src/axai_pg/`.
@@ -514,11 +483,9 @@ See `examples/` directory:
 
 ## Documentation References
 
-- Database schema: `sql/schema/schema.sql`
-- Schema documentation: `docs/schema/README.md`
-- Migration guide: `migrations/MIGRATION_GUIDE.md`
+- Schema documentation: `docs/schema/schema_readme.md`
+- Entity diagram: `docs/schema/entity_diagram.md`
+- Database usage guide: `docs/operations/db_usage_guide.md`
 - Repository pattern: `src/axai_pg/data/repositories/README.md`
-- Integration spec: `docs/integration_spec.md`
-- Performance testing: `sql/schema/perf_test_scenarios.md`
 - Integration testing: `examples/integration_test_example.py`
 - Production initialization: `examples/production_init_example.py`
