@@ -279,7 +279,9 @@ pip install -e .
 
 ## Testing
 
-All tests use a real PostgreSQL database for accuracy and reliability. The database schema is created programmatically using SQLAlchemy models with PostgreSQL-specific features (triggers, check constraints, indexes, etc.).
+**All tests require a real PostgreSQL database** - there are no mock-based unit tests. The database schema is created programmatically using SQLAlchemy models with PostgreSQL-specific features (triggers, check constraints, indexes, etc.).
+
+> **Note:** Tests in `tests/unit/` are named "unit" but actually require a database connection and are automatically marked as integration tests.
 
 ### Quick Start
 
@@ -302,7 +304,10 @@ docker-compose -f docker-compose.standalone-test.yml up -d
 hatch run test          # Run integration tests with coverage
 hatch run test-all      # Run all tests
 
-# Using pytest directly
+# Using pytest directly - run ALL tests
+pytest tests/ -v --integration
+
+# Run only core integration tests
 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 pytest tests/integration/ -v --integration
 
 # Run specific test file

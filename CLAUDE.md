@@ -18,14 +18,20 @@ pip install -e ".[dev]"
 ```
 
 ### Testing
+
+**All tests require a real PostgreSQL database.** There are no mock-based unit tests.
+
 ```bash
-# Start PostgreSQL test container
+# Start PostgreSQL test container (REQUIRED for all tests)
 docker-compose -f docker-compose.standalone-test.yml up -d postgres
 
 # Run all tests via script (recommended)
 ./run_tests.sh
 
-# Run tests manually
+# Run ALL tests manually (integration/ and unit/ directories)
+pytest tests/ -v --integration
+
+# Run core integration tests only
 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests/integration/ -v --integration
 
 # Run specific test file
@@ -33,11 +39,13 @@ pytest tests/integration/test_schema_creation.py -v --integration
 pytest tests/integration/test_crud_operations.py -v --integration
 
 # Run with coverage (if pytest-cov is installed)
-pytest tests/integration/ -v --integration --cov=src --cov-report=html --cov-report=term-missing
+pytest tests/ -v --integration --cov=src --cov-report=html --cov-report=term-missing
 
 # Clean up test containers
 docker-compose -f docker-compose.standalone-test.yml down -v
 ```
+
+> **Note:** Tests in `tests/unit/` are named "unit" but require a database connection. They are automatically marked as integration tests via `tests/unit/conftest.py`.
 
 ### Database Management
 Schema is created programmatically using `PostgreSQLSchemaBuilder`. See "SQLAlchemy-First Schema Management" section below for details.

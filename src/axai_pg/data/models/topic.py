@@ -29,7 +29,7 @@ class Topic(DualIdMixin, Base):
     is_active = Column(Boolean, nullable=False, default=True)
 
     # Relationships
-    parent_topic = relationship("Topic", remote_side=[uuid], backref="subtopics")
+    parent_topic = relationship("Topic", remote_side="Topic.uuid", backref="subtopics")
     documents = relationship("DocumentTopic", back_populates="topic", lazy="dynamic")
 
     # Table Constraints

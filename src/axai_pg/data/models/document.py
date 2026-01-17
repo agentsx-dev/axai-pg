@@ -83,6 +83,10 @@ class Document(DualIdMixin, Base):
     has_graph = Column(Boolean, nullable=False, default=False)
     has_versions = Column(Boolean, nullable=False, default=False)
 
+    # User Processing Preferences (from upload options)
+    summarize_on_upload = Column(Boolean, nullable=False, default=True)  # Whether to generate summary
+    generate_graph_on_upload = Column(Boolean, nullable=False, default=True)  # Whether to generate graph
+
     # Extraction Metadata
     extraction_started_at = Column(DateTime(timezone=True))
     extraction_completed_at = Column(DateTime(timezone=True))
@@ -101,8 +105,8 @@ class Document(DualIdMixin, Base):
     versions = relationship("DocumentVersion", back_populates="document", lazy="dynamic", cascade="all, delete-orphan")
     summaries = relationship("Summary", back_populates="document", lazy="dynamic", cascade="all, delete-orphan")
     topics_rel = relationship("DocumentTopic", back_populates="document", lazy="dynamic", cascade="all, delete-orphan")
-    graph_entity = relationship("GraphEntity", back_populates="document", foreign_keys="GraphEntity.document_id", uselist=False, cascade="all, delete-orphan")
-    graph_relationships_rel = relationship("GraphRelationship", back_populates="document", foreign_keys="GraphRelationship.document_id", lazy="dynamic", cascade="all, delete-orphan")
+    graph_entity = relationship("GraphEntity", back_populates="document", foreign_keys="GraphEntity.document_uuid", uselist=False, cascade="all, delete-orphan")
+    graph_relationships_rel = relationship("GraphRelationship", back_populates="document", foreign_keys="GraphRelationship.document_uuid", lazy="dynamic", cascade="all, delete-orphan")
 
     # From market-ui
     collections = relationship("Collection", secondary="file_collection_association", back_populates="documents", lazy="dynamic")
