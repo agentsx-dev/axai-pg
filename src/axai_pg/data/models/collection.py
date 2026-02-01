@@ -82,7 +82,7 @@ class Collection(DualIdMixin, Base):
     default_visibility_profile = relationship("VisibilityProfile", foreign_keys=[default_visibility_profile_uuid])
 
     # Hierarchical relationships (from market-ui)
-    parent = relationship("Collection", remote_side=[uuid], back_populates="subcollections")
+    parent = relationship("Collection", remote_side="Collection.uuid", back_populates="subcollections")
     subcollections = relationship("Collection", back_populates="parent", lazy="dynamic", cascade="all")
 
     # Table Constraints
@@ -141,7 +141,7 @@ class CollectionEntity(DualIdMixin, Base):
     # Market-ui entity lifecycle management fields
     display_name = Column(Text)  # Alternative display name (falls back to name if not set)
     is_merged = Column(Boolean, default=False, nullable=False)  # True if entity is result of merge operation
-    created_from_link_uuid = Column(UUID(as_uuid=True), ForeignKey('entity_links.uuid', ondelete='SET NULL'), nullable=True)  # EntityLink that created this merge
+    created_from_link_uuid = Column(UUID(as_uuid=True), ForeignKey('entity_links.uuid', ondelete='SET NULL', use_alter=True, name='fk_collection_entity_created_from_link'), nullable=True)  # EntityLink that created this merge
     lifecycle_state = Column(String(20), default='individual', nullable=False)  # individual/linked/merging/merged/unmerging/error
     operation_lock = Column(UUID(as_uuid=True), nullable=True)  # UUID of operation currently modifying this entity (for concurrency control)
 

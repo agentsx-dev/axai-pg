@@ -55,17 +55,17 @@ class TestSchemaCreation:
         """Test that UUID columns are properly created."""
         inspector = inspect(db_session.bind)
 
-        # Check organizations table
+        # Check organizations table - uuid is the primary key
         org_columns = {col['name']: col for col in inspector.get_columns('organizations')}
-        assert 'id' in org_columns
-        assert 'UUID' in str(org_columns['id']['type'])
+        assert 'uuid' in org_columns
+        assert 'UUID' in str(org_columns['uuid']['type'])
 
         # Check users table
         user_columns = {col['name']: col for col in inspector.get_columns('users')}
-        assert 'id' in user_columns
-        assert 'UUID' in str(user_columns['id']['type'])
-        assert 'org_id' in user_columns
-        assert 'UUID' in str(user_columns['org_id']['type'])
+        assert 'uuid' in user_columns
+        assert 'UUID' in str(user_columns['uuid']['type'])
+        assert 'org_uuid' in user_columns
+        assert 'UUID' in str(user_columns['org_uuid']['type'])
 
     def test_timestamp_trigger_function_exists(self, db_session):
         """Test that the update_modified_column trigger function exists."""
@@ -155,7 +155,7 @@ class TestSchemaCreation:
         db_session.flush()
 
         # Invalid email should fail
-        user = User(username="testuser", email="invalid-email", org_id=org.id)
+        user = User(username="testuser", email="invalid-email", org_uuid=org.uuid)
         db_session.add(user)
 
         with pytest.raises(Exception) as exc_info:
@@ -171,7 +171,7 @@ class TestSchemaCreation:
         db_session.add(org)
         db_session.flush()
 
-        user = User(username="testuser", email="test@example.com", org_id=org.id)
+        user = User(username="testuser", email="test@example.com", org_uuid=org.uuid)
         db_session.add(user)
         db_session.flush()
 
@@ -180,8 +180,8 @@ class TestSchemaCreation:
         doc = Document(
             title="Test",
             content=content,
-            owner_id=user.id,
-            org_id=org.id,
+            owner_uuid=user.uuid,
+            org_uuid=org.uuid,
             document_type="text",
             status="invalid_status",  # Not in allowed values
             filename="test.txt",
@@ -203,7 +203,7 @@ class TestSchemaCreation:
         db_session.add(org)
         db_session.flush()
 
-        user = User(username="testuser", email="test@example.com", org_id=org.id)
+        user = User(username="testuser", email="test@example.com", org_uuid=org.uuid)
         db_session.add(user)
         db_session.flush()
 
@@ -212,8 +212,8 @@ class TestSchemaCreation:
         doc = Document(
             title="Test",
             content=content,
-            owner_id=user.id,
-            org_id=org.id,
+            owner_uuid=user.uuid,
+            org_uuid=org.uuid,
             document_type="text",
             status="draft",
             version=0,  # Should be > 0
@@ -238,8 +238,8 @@ class TestSchemaCreation:
         doc_indexes = {idx['name']: idx for idx in inspector.get_indexes('documents')}
 
         expected_indexes = [
-            'idx_documents_org_id',
-            'idx_documents_owner_id',
+            'idx_documents_org_uuid',
+            'idx_documents_owner_uuid',
             'idx_documents_type',
             'idx_documents_status',
         ]
@@ -268,7 +268,7 @@ class TestSchemaCreation:
         db_session.add(org)
         db_session.flush()
 
-        user = User(username="testuser", email="test@example.com", org_id=org.id)
+        user = User(username="testuser", email="test@example.com", org_uuid=org.uuid)
         db_session.add(user)
         db_session.flush()
 
@@ -276,8 +276,8 @@ class TestSchemaCreation:
         doc = Document(
             title="Test Doc",
             content=content,
-            owner_id=user.id,
-            org_id=org.id,
+            owner_uuid=user.uuid,
+            org_uuid=org.uuid,
             document_type="text",
             status="draft",
             filename="test_doc.txt",
@@ -305,12 +305,12 @@ class TestSchemaCreation:
         db_session.flush()
 
         # Create first user
-        user1 = User(username="testuser", email="test@example.com", org_id=org.id)
+        user1 = User(username="testuser", email="test@example.com", org_uuid=org.uuid)
         db_session.add(user1)
         db_session.commit()
 
         # Try to create user with same username
-        user2 = User(username="testuser", email="different@example.com", org_id=org.id)
+        user2 = User(username="testuser", email="different@example.com", org_uuid=org.uuid)
         db_session.add(user2)
 
         with pytest.raises(Exception) as exc_info:
@@ -325,7 +325,7 @@ class TestSchemaCreation:
         db_session.add(org)
         db_session.flush()
 
-        user = User(username="testuser", email="test@example.com", org_id=org.id)
+        user = User(username="testuser", email="test@example.com", org_uuid=org.uuid)
         db_session.add(user)
         db_session.flush()
 
@@ -334,8 +334,8 @@ class TestSchemaCreation:
         doc = Document(
             title="Test Doc",
             content=content,
-            owner_id=user.id,
-            org_id=org.id,
+            owner_uuid=user.uuid,
+            org_uuid=org.uuid,
             document_type="text",
             status="draft",
             document_metadata={"key": "value", "nested": {"data": 123}},
@@ -355,27 +355,27 @@ class TestSchemaCreation:
         """Test that collection self-referential FK is properly created."""
         inspector = inspect(db_session.bind)
 
-        # Check parent_id column exists
+        # Check parent_uuid column exists
         collection_columns = {col['name']: col for col in inspector.get_columns('collections')}
-        assert 'parent_id' in collection_columns, "Collections should have parent_id column"
-        assert 'UUID' in str(collection_columns['parent_id']['type'])
+        assert 'parent_uuid' in collection_columns, "Collections should have parent_uuid column"
+        assert 'UUID' in str(collection_columns['parent_uuid']['type'])
 
         # Check self-referential FK exists
         collection_fks = inspector.get_foreign_keys('collections')
         parent_fk = next((fk for fk in collection_fks if 'collections' in fk['referred_table']), None)
         assert parent_fk is not None, "Collections should have self-referential FK"
-        assert 'parent_id' in parent_fk['constrained_columns']
+        assert 'parent_uuid' in parent_fk['constrained_columns']
 
     def test_visibility_profile_foreign_keys(self, db_session):
         """Test that visibility_profile FKs are properly created."""
         inspector = inspect(db_session.bind)
 
-        # Check file_id and collection_id columns exist
+        # Check file_uuid and collection_uuid columns exist
         vp_columns = {col['name']: col for col in inspector.get_columns('visibility_profiles')}
-        assert 'file_id' in vp_columns, "VisibilityProfile should have file_id column"
-        assert 'collection_id' in vp_columns, "VisibilityProfile should have collection_id column"
-        assert 'UUID' in str(vp_columns['file_id']['type'])
-        assert 'UUID' in str(vp_columns['collection_id']['type'])
+        assert 'file_uuid' in vp_columns, "VisibilityProfile should have file_uuid column"
+        assert 'collection_uuid' in vp_columns, "VisibilityProfile should have collection_uuid column"
+        assert 'UUID' in str(vp_columns['file_uuid']['type'])
+        assert 'UUID' in str(vp_columns['collection_uuid']['type'])
 
         # Check FKs exist
         vp_fks = inspector.get_foreign_keys('visibility_profiles')
@@ -391,14 +391,14 @@ class TestSchemaCreation:
         db_session.add(org)
         db_session.flush()
 
-        user = User(username="testuser", email="test@example.com", org_id=org.id)
+        user = User(username="testuser", email="test@example.com", org_uuid=org.uuid)
         db_session.add(user)
         db_session.flush()
 
         # Invalid profile_type should fail
         profile = VisibilityProfile(
             name="Test Profile",
-            owner_id=user.id,
+            owner_uuid=user.uuid,
             profile_type="INVALID_TYPE"  # Not in ('FILE', 'COLLECTION', 'GLOBAL')
         )
         db_session.add(profile)
@@ -417,14 +417,14 @@ class TestSchemaCreation:
         db_session.add(org)
         db_session.flush()
 
-        user = User(username="testuser", email="test@example.com", org_id=org.id)
+        user = User(username="testuser", email="test@example.com", org_uuid=org.uuid)
         db_session.add(user)
         db_session.flush()
 
         # Create visibility profile with JSON data
         profile = VisibilityProfile(
             name="Test Profile",
-            owner_id=user.id,
+            owner_uuid=user.uuid,
             profile_type="GLOBAL",
             visible_entity_types=["Person", "Organization"],
             all_entities=["Person", "Organization", "Location"],

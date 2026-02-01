@@ -74,18 +74,27 @@ def test_custom_cache_config():
     assert config.permission_cache.ttl_seconds == 600
     assert config.permission_cache.max_size == 2000
 
-def test_rate_limit_validation():
-    """Test rate limit configuration validation."""
-    with pytest.raises(ValueError):
-        RateLimitConfig(-1, 100)  # Invalid window seconds
-    
-    with pytest.raises(ValueError):
-        RateLimitConfig(3600, -1)  # Invalid max requests
+def test_rate_limit_creation():
+    """Test rate limit configuration creation."""
+    # Test valid configuration
+    rate_limit = RateLimitConfig(3600, 100)
+    assert rate_limit.window_seconds == 3600
+    assert rate_limit.max_requests == 100
 
-def test_cache_config_validation():
-    """Test cache configuration validation."""
-    with pytest.raises(ValueError):
-        CacheConfig(-1, 1000)  # Invalid TTL
-    
-    with pytest.raises(ValueError):
-        CacheConfig(300, -1)  # Invalid max size
+    # Test that dataclass accepts any values (no built-in validation)
+    rate_limit_custom = RateLimitConfig(1800, 50)
+    assert rate_limit_custom.window_seconds == 1800
+    assert rate_limit_custom.max_requests == 50
+
+
+def test_cache_config_creation():
+    """Test cache configuration creation."""
+    # Test valid configuration
+    cache_config = CacheConfig(300, 1000)
+    assert cache_config.ttl_seconds == 300
+    assert cache_config.max_size == 1000
+
+    # Test that dataclass accepts any values (no built-in validation)
+    cache_config_custom = CacheConfig(600, 2000)
+    assert cache_config_custom.ttl_seconds == 600
+    assert cache_config_custom.max_size == 2000

@@ -80,7 +80,13 @@ Branch naming conventions:
 ### 3. Test Your Changes
 
 ```bash
-# Run all tests
+# Start the test database (required for all tests)
+docker-compose -f docker-compose.standalone-test.yml up -d postgres
+
+# Run all tests (both integration/ and unit/ directories)
+pytest tests/ -v --integration
+
+# Run only core integration tests
 pytest tests/integration/ -v --integration
 
 # Run specific test file
@@ -88,7 +94,12 @@ pytest tests/integration/test_schema_creation.py -v --integration
 
 # Run with coverage
 pytest tests/ -v --integration --cov=src --cov-report=term-missing
+
+# Stop the test database when done
+docker-compose -f docker-compose.standalone-test.yml down -v
 ```
+
+> **Important:** All tests require the `--integration` flag and a running PostgreSQL database.
 
 ### 4. Format and Lint
 
@@ -167,24 +178,61 @@ def get_user_by_email(session: Session, email: str) -> Optional[User]:
 - Define indexes for frequently queried columns
 - Use relationships with appropriate lazy loading
 
+#### DualIdMixin Pattern
+
+All entity models inherit from `DualIdMixin` which provides:
+
+- **`uuid`**: UUID primary key used for all foreign key relationships (internal)
+- **`id`**: 8-character string derived from uuid for UI display (external)
+
+This pattern allows efficient UUID-based relationships internally while providing short, user-friendly IDs for UI/API consumption.
+
+```python
+from .base import DualIdMixin
+
+class MyModel(DualIdMixin, Base):
+    __tablename__ = 'my_models'
+
+    # DualIdMixin automatically provides:
+    # - uuid: UUID primary key
+    # - id: 8-char string (auto-generated from uuid)
+
+    # Foreign keys use _uuid suffix and reference .uuid
+    parent_uuid = Column(UUID(as_uuid=True), ForeignKey('parents.uuid'))
+```
+
+**Important conventions:**
+- Foreign key columns use `_uuid` suffix (e.g., `org_uuid`, `owner_uuid`, `document_uuid`)
+- Foreign keys reference the `uuid` column (e.g., `ForeignKey('users.uuid')`)
+- When creating related objects, use `.uuid` not `.id` (e.g., `org_uuid=org.uuid`)
+
 Example:
 ```python
-class Document(Base):
+from .base import DualIdMixin
+
+class Document(DualIdMixin, Base):
     """
     Documents store content and metadata for the document management system.
 
     Each document belongs to an organization (multi-tenant) and is owned
     by a user. Documents support versioning, topics, and summaries.
+
+    Uses dual ID pattern:
+    - uuid: UUID primary key for internal use and FK relationships
+    - id: 8-character string for UI display (auto-generated from uuid)
     """
     __tablename__ = 'documents'
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    # DualIdMixin provides: uuid (PK) and id (8-char display string)
     title = Column(Text, nullable=False)
+    org_uuid = Column(UUID(as_uuid=True), ForeignKey('organizations.uuid'), nullable=False)
+    owner_uuid = Column(UUID(as_uuid=True), ForeignKey('users.uuid'), nullable=False)
     # ... more fields
 
     __table_args__ = (
         CheckConstraint("length(trim(title)) > 0", name="documents_title_not_empty"),
-        Index('idx_documents_org_id', 'org_id'),
+        Index('idx_documents_org_uuid', 'org_uuid'),
+        Index('idx_documents_owner_uuid', 'owner_uuid'),
     )
 ```
 
@@ -207,6 +255,26 @@ Why?
 - Catches schema compatibility issues
 - Ensures query performance
 
+### Test Structure
+
+All tests in this project require a real PostgreSQL database and are marked as integration tests:
+
+```
+tests/
+├── conftest.py              # Shared fixtures (database setup)
+├── integration/             # Core integration tests
+│   ├── test_crud_operations.py
+│   ├── test_schema_creation.py
+│   └── ...
+└── unit/                    # Additional tests (also require database)
+    ├── conftest.py          # Marks all as integration tests
+    ├── config/
+    ├── security/
+    └── repositories/
+```
+
+> **Note:** The `tests/unit/` directory contains tests that are named "unit" but actually require a database connection. They are automatically marked as integration tests.
+
 ### Writing Tests
 
 1. **Use proper fixtures**:
@@ -217,14 +285,19 @@ def test_create_user(db_session):
     db_session.add(org)
     db_session.flush()
 
+    # Note: Models use DualIdMixin pattern with:
+    # - uuid: UUID primary key for FK relationships
+    # - id: 8-character string for UI display
     user = User(
         username="testuser",
         email="test@example.com",
-        org_id=org.id
+        org_uuid=org.uuid  # Use _uuid suffix for foreign keys
     )
     db_session.add(user)
     db_session.commit()
 
+    assert user.uuid is not None  # UUID primary key
+    assert len(user.id) == 8  # Short display ID
     assert db_session.query(User).filter_by(username="testuser").first() is not None
 ```
 
@@ -321,9 +394,10 @@ Describe how you tested your changes
    - Monitor query performance with repository metrics
 
 3. **Multi-Tenancy**:
-   - Always include `org_id` for tenant-specific data
+   - Always include `org_uuid` for tenant-specific data (references `organizations.uuid`)
    - Test data isolation between organizations
    - Use query middleware for automatic filtering
+   - Use the `_uuid` suffix for all foreign key columns (e.g., `owner_uuid`, `document_uuid`)
 
 ### Repository Pattern
 

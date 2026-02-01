@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, CheckConstraint, Index, Boolean
 from sqlalchemy.dialects.postgresql import UUID, JSONB, JSON
 from sqlalchemy.sql import func
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 import uuid
 from ..config.database import Base
 from .base import DualIdMixin
@@ -83,10 +83,44 @@ class Document(DualIdMixin, Base):
     has_graph = Column(Boolean, nullable=False, default=False)
     has_versions = Column(Boolean, nullable=False, default=False)
 
+    # User Processing Preferences (from upload options)
+    summarize_on_upload = Column(Boolean, nullable=False, default=True)  # Whether to generate summary
+    generate_graph_on_upload = Column(Boolean, nullable=False, default=True)  # Whether to generate graph
+
     # Extraction Metadata
     extraction_started_at = Column(DateTime(timezone=True))
     extraction_completed_at = Column(DateTime(timezone=True))
     extraction_error = Column(Text)
+
+    # Summarization Status (pending/processing/complete/failed/not_requested)
+    summarization_status = Column(String(20), default='pending')
+    summarization_started_at = Column(DateTime(timezone=True))
+    summarization_completed_at = Column(DateTime(timezone=True))
+    summarization_error = Column(Text)
+
+    # Graph Generation Status (pending/processing/complete/failed/not_requested)
+    graph_generation_status = Column(String(20), default='pending')
+    graph_generation_started_at = Column(DateTime(timezone=True))
+    graph_generation_completed_at = Column(DateTime(timezone=True))
+    graph_generation_error = Column(Text)
+
+    # Document Chunking Fields
+    # For large documents that exceed processing thresholds, the document is split into chunks.
+    # Parent documents have is_chunked=True and chunk_count set.
+    # Child chunks have parent_document_uuid, chunk_index, and total_chunks set.
+    parent_document_uuid = Column(
+        UUID(as_uuid=True),
+        ForeignKey("documents.uuid", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
+    )
+    is_chunked = Column(Boolean, default=False, nullable=False, server_default="false")
+    chunk_count = Column(Integer, nullable=True)  # Number of chunks (parent only)
+    chunk_index = Column(Integer, nullable=True)  # 0-based index (chunks only)
+    total_chunks = Column(Integer, nullable=True)  # Total chunks in set (chunks only)
+    character_count = Column(Integer, nullable=True)  # Character count of extracted text
+    chunking_status = Column(String(20), nullable=True)  # pending/processing/complete/failed
+    chunking_error = Column(String(500), nullable=True)  # Error message if chunking failed
 
     # Metadata
     document_metadata = Column(JSONB, name='metadata')
@@ -101,14 +135,25 @@ class Document(DualIdMixin, Base):
     versions = relationship("DocumentVersion", back_populates="document", lazy="dynamic", cascade="all, delete-orphan")
     summaries = relationship("Summary", back_populates="document", lazy="dynamic", cascade="all, delete-orphan")
     topics_rel = relationship("DocumentTopic", back_populates="document", lazy="dynamic", cascade="all, delete-orphan")
-    graph_entity = relationship("GraphEntity", back_populates="document", foreign_keys="GraphEntity.document_id", uselist=False, cascade="all, delete-orphan")
-    graph_relationships_rel = relationship("GraphRelationship", back_populates="document", foreign_keys="GraphRelationship.document_id", lazy="dynamic", cascade="all, delete-orphan")
+    graph_entity = relationship("GraphEntity", back_populates="document", foreign_keys="GraphEntity.document_uuid", uselist=False, cascade="all, delete-orphan")
+    graph_relationships_rel = relationship("GraphRelationship", back_populates="document", foreign_keys="GraphRelationship.document_uuid", lazy="dynamic", cascade="all, delete-orphan")
 
     # From market-ui
     collections = relationship("Collection", secondary="file_collection_association", back_populates="documents", lazy="dynamic")
     graph_entities = relationship("GraphEntity", back_populates="source_file", lazy="dynamic", foreign_keys="GraphEntity.source_file_uuid")
     collection_contexts = relationship("DocumentCollectionContext", back_populates="document", lazy="dynamic", cascade="all, delete-orphan")
     default_visibility_profile = relationship("VisibilityProfile", foreign_keys=[default_visibility_profile_uuid])
+
+    # Document Chunking Relationships (self-referential)
+    # - chunks: Get child chunks from parent document (lazy load - could be many)
+    # - parent_document: Get parent document from chunk (eager load via selectin)
+    chunks = relationship(
+        "Document",
+        backref=backref("parent_document", lazy="selectin", uselist=False),
+        remote_side="Document.uuid",
+        foreign_keys=[parent_document_uuid],
+        lazy="select",
+    )
 
     # Table Constraints
     __table_args__ = (

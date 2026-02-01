@@ -17,7 +17,8 @@ from sqlalchemy import event, DDL, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.schema import CreateTable
 
-from ..data.config.database import Base
+# Import models to register them with Base.metadata and set up event listeners
+from ..data.models import Base
 
 logger = logging.getLogger(__name__)
 
@@ -185,62 +186,62 @@ class PostgreSQLSchemaBuilder:
 
         indexes = [
             # Document indexes for common queries
-            "CREATE INDEX IF NOT EXISTS idx_documents_org_status ON documents(org_id, status)",
-            "CREATE INDEX IF NOT EXISTS idx_documents_owner ON documents(owner_id)",
+            "CREATE INDEX IF NOT EXISTS idx_documents_org_status ON documents(org_uuid, status)",
+            "CREATE INDEX IF NOT EXISTS idx_documents_owner ON documents(owner_uuid)",
             "CREATE INDEX IF NOT EXISTS idx_documents_type ON documents(document_type)",
             "CREATE INDEX IF NOT EXISTS idx_documents_processing ON documents(processing_status)",
             "CREATE INDEX IF NOT EXISTS idx_documents_filename ON documents(filename)",
 
             # User indexes
-            "CREATE INDEX IF NOT EXISTS idx_users_org ON users(org_id)",
+            "CREATE INDEX IF NOT EXISTS idx_users_org ON users(org_uuid)",
             "CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)",
 
             # Summary indexes
-            "CREATE INDEX IF NOT EXISTS idx_summaries_document ON summaries(document_id)",
+            "CREATE INDEX IF NOT EXISTS idx_summaries_document ON summaries(document_uuid)",
             "CREATE INDEX IF NOT EXISTS idx_summaries_type ON summaries(summary_type)",
 
             # Topic indexes
             "CREATE INDEX IF NOT EXISTS idx_topics_name ON topics(name)",
-            "CREATE INDEX IF NOT EXISTS idx_document_topics_document ON document_topics(document_id)",
-            "CREATE INDEX IF NOT EXISTS idx_document_topics_topic ON document_topics(topic_id)",
+            "CREATE INDEX IF NOT EXISTS idx_document_topics_document ON document_topics(document_uuid)",
+            "CREATE INDEX IF NOT EXISTS idx_document_topics_topic ON document_topics(topic_uuid)",
 
             # Graph indexes (updated for GraphEntity)
-            "CREATE INDEX IF NOT EXISTS idx_graph_entities_document ON graph_entities(document_id)",
+            "CREATE INDEX IF NOT EXISTS idx_graph_entities_document ON graph_entities(document_uuid)",
             "CREATE INDEX IF NOT EXISTS idx_graph_entities_entity_type ON graph_entities(entity_type)",
-            "CREATE INDEX IF NOT EXISTS idx_graph_entities_source_file ON graph_entities(source_file_id)",
-            "CREATE INDEX IF NOT EXISTS idx_graph_entities_source_collection ON graph_entities(source_collection_id)",
-            "CREATE INDEX IF NOT EXISTS idx_graph_rel_source ON graph_relationships(source_entity_id)",
-            "CREATE INDEX IF NOT EXISTS idx_graph_rel_target ON graph_relationships(target_entity_id)",
-            "CREATE INDEX IF NOT EXISTS idx_graph_rel_document ON graph_relationships(document_id)",
-            "CREATE INDEX IF NOT EXISTS idx_graph_rel_source_file ON graph_relationships(source_file_id)",
-            "CREATE INDEX IF NOT EXISTS idx_graph_rel_source_collection ON graph_relationships(source_collection_id)",
+            "CREATE INDEX IF NOT EXISTS idx_graph_entities_source_file ON graph_entities(source_file_uuid)",
+            "CREATE INDEX IF NOT EXISTS idx_graph_entities_source_collection ON graph_entities(source_collection_uuid)",
+            "CREATE INDEX IF NOT EXISTS idx_graph_rel_source ON graph_relationships(source_entity_uuid)",
+            "CREATE INDEX IF NOT EXISTS idx_graph_rel_target ON graph_relationships(target_entity_uuid)",
+            "CREATE INDEX IF NOT EXISTS idx_graph_rel_document ON graph_relationships(document_uuid)",
+            "CREATE INDEX IF NOT EXISTS idx_graph_rel_source_file ON graph_relationships(source_file_uuid)",
+            "CREATE INDEX IF NOT EXISTS idx_graph_rel_source_collection ON graph_relationships(source_collection_uuid)",
 
             # Collection indexes
-            "CREATE INDEX IF NOT EXISTS idx_collections_owner ON collections(owner_id)",
-            "CREATE INDEX IF NOT EXISTS idx_collections_org ON collections(org_id)",
-            "CREATE INDEX IF NOT EXISTS idx_collection_entities_collection ON collection_entities(collection_id)",
+            "CREATE INDEX IF NOT EXISTS idx_collections_owner ON collections(owner_uuid)",
+            "CREATE INDEX IF NOT EXISTS idx_collections_org ON collections(org_uuid)",
+            "CREATE INDEX IF NOT EXISTS idx_collection_entities_collection ON collection_entities(collection_uuid)",
             "CREATE INDEX IF NOT EXISTS idx_collection_entities_entity_id ON collection_entities(entity_id)",
-            "CREATE INDEX IF NOT EXISTS idx_collection_relationships_collection ON collection_relationships(collection_id)",
-            "CREATE INDEX IF NOT EXISTS idx_entity_links_graph_entity ON entity_links(graph_entity_id)",
-            "CREATE INDEX IF NOT EXISTS idx_entity_links_collection_entity ON entity_links(collection_entity_id)",
-            "CREATE INDEX IF NOT EXISTS idx_entity_operations_collection ON entity_operations(collection_id)",
-            "CREATE INDEX IF NOT EXISTS idx_doc_collection_contexts_document ON document_collection_contexts(document_id)",
-            "CREATE INDEX IF NOT EXISTS idx_doc_collection_contexts_collection ON document_collection_contexts(collection_id)",
+            "CREATE INDEX IF NOT EXISTS idx_collection_relationships_collection ON collection_relationships(collection_uuid)",
+            "CREATE INDEX IF NOT EXISTS idx_entity_links_graph_entity ON entity_links(graph_entity_uuid)",
+            "CREATE INDEX IF NOT EXISTS idx_entity_links_collection_entity ON entity_links(collection_entity_uuid)",
+            "CREATE INDEX IF NOT EXISTS idx_entity_operations_collection ON entity_operations(collection_uuid)",
+            "CREATE INDEX IF NOT EXISTS idx_doc_collection_contexts_document ON document_collection_contexts(document_uuid)",
+            "CREATE INDEX IF NOT EXISTS idx_doc_collection_contexts_collection ON document_collection_contexts(collection_uuid)",
 
             # Visibility profile indexes
-            "CREATE INDEX IF NOT EXISTS idx_visibility_profiles_owner ON visibility_profiles(owner_id)",
+            "CREATE INDEX IF NOT EXISTS idx_visibility_profiles_owner ON visibility_profiles(owner_uuid)",
 
             # Role and security indexes
             "CREATE INDEX IF NOT EXISTS idx_roles_name ON roles(name)",
-            "CREATE INDEX IF NOT EXISTS idx_user_roles_user ON user_roles(user_id)",
-            "CREATE INDEX IF NOT EXISTS idx_user_roles_role ON user_roles(role_id)",
-            "CREATE INDEX IF NOT EXISTS idx_tokens_user ON tokens(user_id)",
+            "CREATE INDEX IF NOT EXISTS idx_user_roles_user ON user_roles(user_uuid)",
+            "CREATE INDEX IF NOT EXISTS idx_user_roles_role ON user_roles(role_uuid)",
+            "CREATE INDEX IF NOT EXISTS idx_tokens_user ON tokens(user_uuid)",
             "CREATE INDEX IF NOT EXISTS idx_tokens_expires ON tokens(expires_at)",
-            "CREATE INDEX IF NOT EXISTS idx_audit_logs_user ON audit_logs(user_id)",
+            "CREATE INDEX IF NOT EXISTS idx_audit_logs_user ON audit_logs(user_uuid)",
             "CREATE INDEX IF NOT EXISTS idx_audit_logs_time ON audit_logs(action_time)",
 
             # Feedback indexes
-            "CREATE INDEX IF NOT EXISTS idx_feedback_user ON feedback(user_id)",
+            "CREATE INDEX IF NOT EXISTS idx_feedback_user ON feedback(user_uuid)",
             "CREATE INDEX IF NOT EXISTS idx_feedback_type ON feedback(type)",
         ]
 

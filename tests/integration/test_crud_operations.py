@@ -22,28 +22,31 @@ class TestCRUDOperations:
         db_session.add(org)
         db_session.flush()
 
-        assert org.id is not None
-        assert isinstance(org.id, uuid.UUID)
+        assert org.uuid is not None
+        assert isinstance(org.uuid, uuid.UUID)
+        assert org.id is not None  # 8-char string ID
+        assert isinstance(org.id, str)
+        assert len(org.id) == 8
         assert org.name == "Test Organization"
 
         # Create user
         user = User(
             username="testuser",
             email="test@example.com",
-            org_id=org.id
+            org_uuid=org.uuid
         )
         db_session.add(user)
         db_session.flush()
 
-        assert user.id is not None
-        assert isinstance(user.id, uuid.UUID)
-        assert isinstance(user.org_id, uuid.UUID)
-        assert user.org_id == org.id
+        assert user.uuid is not None
+        assert isinstance(user.uuid, uuid.UUID)
+        assert isinstance(user.org_uuid, uuid.UUID)
+        assert user.org_uuid == org.uuid
         assert user.username == "testuser"
 
         # Verify relationship
-        assert user.organization.id == org.id
-        assert org.users.first().id == user.id
+        assert user.organization.uuid == org.uuid
+        assert org.users.first().uuid == user.uuid
 
     def test_create_document_with_summary(self, db_session):
         """Test creating document with summary and relationships."""
@@ -55,7 +58,7 @@ class TestCRUDOperations:
         user = User(
             username="testuser",
             email="test@example.com",
-            org_id=org.id
+            org_uuid=org.uuid
         )
         db_session.add(user)
         db_session.flush()
@@ -65,8 +68,8 @@ class TestCRUDOperations:
         document = Document(
             title="Test Document",
             content=content,
-            owner_id=user.id,
-            org_id=org.id,
+            owner_uuid=user.uuid,
+            org_uuid=org.uuid,
             document_type="text",
             status="draft",
             filename="test_document.txt",
@@ -78,15 +81,15 @@ class TestCRUDOperations:
         db_session.flush()
 
         assert document.id is not None
-        assert isinstance(document.id, uuid.UUID)
-        assert isinstance(document.owner_id, uuid.UUID)
-        assert isinstance(document.org_id, uuid.UUID)
-        assert document.owner_id == user.id
-        assert document.org_id == org.id
+        assert isinstance(document.uuid, uuid.UUID)
+        assert isinstance(document.owner_uuid, uuid.UUID)
+        assert isinstance(document.org_uuid, uuid.UUID)
+        assert document.owner_uuid == user.uuid
+        assert document.org_uuid == org.uuid
 
         # Create summary
         summary = Summary(
-            document_id=document.id,
+            document_uuid=document.uuid,
             content="This is a summary of the test document",
             summary_type="abstract",
             tool_agent="test-agent",
@@ -96,9 +99,9 @@ class TestCRUDOperations:
         db_session.flush()
 
         assert summary.id is not None
-        assert isinstance(summary.id, uuid.UUID)
-        assert isinstance(summary.document_id, uuid.UUID)
-        assert summary.document_id == document.id
+        assert isinstance(summary.uuid, uuid.UUID)
+        assert isinstance(summary.document_uuid, uuid.UUID)
+        assert summary.document_uuid == document.uuid
         assert summary.confidence_score == 0.95
 
     def test_create_topic_and_associate_with_document(self, db_session):
@@ -111,7 +114,7 @@ class TestCRUDOperations:
         user = User(
             username="testuser",
             email="test@example.com",
-            org_id=org.id
+            org_uuid=org.uuid
         )
         db_session.add(user)
         db_session.flush()
@@ -120,8 +123,8 @@ class TestCRUDOperations:
         document = Document(
             title="Test Document",
             content=content,
-            owner_id=user.id,
-            org_id=org.id,
+            owner_uuid=user.uuid,
+            org_uuid=org.uuid,
             document_type="text",
             status="draft",
             filename="test_document.txt",
@@ -144,14 +147,14 @@ class TestCRUDOperations:
         db_session.flush()
 
         assert topic.id is not None
-        assert isinstance(topic.id, uuid.UUID)
+        assert isinstance(topic.uuid, uuid.UUID)
         assert topic.name == "Test Topic"
         assert topic.keywords == ["test", "example"]
 
         # Verify document-topic relationship
         doc_topic = DocumentTopic(
-            document_id=document.id,
-            topic_id=topic.id,
+            document_uuid=document.uuid,
+            topic_uuid=topic.uuid,
             relevance_score=0.9,
             extracted_by_tool="test-tool"
         )
@@ -159,11 +162,11 @@ class TestCRUDOperations:
         db_session.flush()
 
         assert doc_topic.id is not None
-        assert isinstance(doc_topic.id, uuid.UUID)
-        assert isinstance(doc_topic.document_id, uuid.UUID)
-        assert isinstance(doc_topic.topic_id, uuid.UUID)
-        assert doc_topic.document_id == document.id
-        assert doc_topic.topic_id == topic.id
+        assert isinstance(doc_topic.uuid, uuid.UUID)
+        assert isinstance(doc_topic.document_uuid, uuid.UUID)
+        assert isinstance(doc_topic.topic_uuid, uuid.UUID)
+        assert doc_topic.document_uuid == document.uuid
+        assert doc_topic.topic_uuid == topic.uuid
         assert doc_topic.relevance_score == 0.9
 
     def test_query_operations(self, db_session):
@@ -176,7 +179,7 @@ class TestCRUDOperations:
         user = User(
             username="testuser",
             email="test@example.com",
-            org_id=org.id
+            org_uuid=org.uuid
         )
         db_session.add(user)
         db_session.flush()
@@ -185,8 +188,8 @@ class TestCRUDOperations:
         document = Document(
             title="Test Document",
             content=content,
-            owner_id=user.id,
-            org_id=org.id,
+            owner_uuid=user.uuid,
+            org_uuid=org.uuid,
             document_type="text",
             status="draft",
             filename="test_document.txt",
@@ -200,25 +203,25 @@ class TestCRUDOperations:
         # Test queries
         # Get organization by name
         queried_org = db_session.query(Organization).filter_by(name="Test Org").first()
-        assert queried_org.id == org.id
-        assert isinstance(queried_org.id, uuid.UUID)
+        assert queried_org.uuid == org.uuid
+        assert isinstance(queried_org.uuid, uuid.UUID)
 
         # Get user by username
         queried_user = db_session.query(User).filter_by(username="testuser").first()
-        assert queried_user.id == user.id
-        assert isinstance(queried_user.id, uuid.UUID)
+        assert queried_user.uuid == user.uuid
+        assert isinstance(queried_user.uuid, uuid.UUID)
 
         # Get documents for organization
-        org_documents = db_session.query(Document).filter_by(org_id=org.id).all()
+        org_documents = db_session.query(Document).filter_by(org_uuid=org.uuid).all()
         assert len(org_documents) == 1
-        assert org_documents[0].id == document.id
-        assert isinstance(org_documents[0].id, uuid.UUID)
+        assert org_documents[0].uuid == document.uuid
+        assert isinstance(org_documents[0].uuid, uuid.UUID)
 
         # Get documents owned by user
-        user_documents = db_session.query(Document).filter_by(owner_id=user.id).all()
+        user_documents = db_session.query(Document).filter_by(owner_uuid=user.uuid).all()
         assert len(user_documents) == 1
-        assert user_documents[0].id == document.id
-        assert isinstance(user_documents[0].id, uuid.UUID)
+        assert user_documents[0].uuid == document.uuid
+        assert isinstance(user_documents[0].uuid, uuid.UUID)
 
     def test_update_user(self, db_session):
         """Test updating user fields."""
@@ -230,7 +233,7 @@ class TestCRUDOperations:
         user = User(
             username="original_username",
             email="original@example.com",
-            org_id=org.id
+            org_uuid=org.uuid
         )
         db_session.add(user)
         db_session.flush()
@@ -247,7 +250,7 @@ class TestCRUDOperations:
         assert updated_user.id == original_id
         assert updated_user.username == "updated_username"
         assert updated_user.email == "updated@example.com"
-        assert updated_user.org_id == org.id  # Foreign key unchanged
+        assert updated_user.org_uuid == org.uuid  # Foreign key unchanged
 
     def test_update_document_status(self, db_session):
         """Test updating document status and content."""
@@ -259,7 +262,7 @@ class TestCRUDOperations:
         user = User(
             username="testuser",
             email="test@example.com",
-            org_id=org.id
+            org_uuid=org.uuid
         )
         db_session.add(user)
         db_session.flush()
@@ -268,8 +271,8 @@ class TestCRUDOperations:
         document = Document(
             title="Original Title",
             content=original_content,
-            owner_id=user.id,
-            org_id=org.id,
+            owner_uuid=user.uuid,
+            org_uuid=org.uuid,
             document_type="text",
             status="draft",
             filename="original.txt",
@@ -294,8 +297,8 @@ class TestCRUDOperations:
         assert updated_doc.title == "Updated Title"
         assert updated_doc.content == "Updated content with more information"
         assert updated_doc.status == "published"
-        assert updated_doc.owner_id == user.id  # Foreign key unchanged
-        assert updated_doc.org_id == org.id  # Foreign key unchanged
+        assert updated_doc.owner_uuid == user.uuid  # Foreign key unchanged
+        assert updated_doc.org_uuid == org.uuid  # Foreign key unchanged
 
     def test_create_collection_with_hierarchy(self, db_session):
         """Test creating hierarchical collections with parent-child relationships."""
@@ -307,7 +310,7 @@ class TestCRUDOperations:
         user = User(
             username="testuser",
             email="test@example.com",
-            org_id=org.id
+            org_uuid=org.uuid
         )
         db_session.add(user)
         db_session.flush()
@@ -316,17 +319,17 @@ class TestCRUDOperations:
         root_collection = Collection(
             name="Root Collection",
             description="Top level collection",
-            owner_id=user.id,
-            org_id=org.id,
-            parent_id=None,  # No parent - this is root
+            owner_uuid=user.uuid,
+            org_uuid=org.uuid,
+            parent_uuid=None,  # No parent - this is root
             is_deleted=False
         )
         db_session.add(root_collection)
         db_session.flush()
 
         assert root_collection.id is not None
-        assert isinstance(root_collection.id, uuid.UUID)
-        assert root_collection.parent_id is None
+        assert isinstance(root_collection.uuid, uuid.UUID)
+        assert root_collection.parent_uuid is None
         assert root_collection.is_deleted is False
         assert root_collection.deleted_at is None
 
@@ -334,23 +337,23 @@ class TestCRUDOperations:
         child_collection = Collection(
             name="Child Collection",
             description="Nested collection",
-            owner_id=user.id,
-            org_id=org.id,
-            parent_id=root_collection.id,
+            owner_uuid=user.uuid,
+            org_uuid=org.uuid,
+            parent_uuid=root_collection.uuid,
             is_deleted=False
         )
         db_session.add(child_collection)
         db_session.flush()
 
         assert child_collection.id is not None
-        assert isinstance(child_collection.id, uuid.UUID)
-        assert isinstance(child_collection.parent_id, uuid.UUID)
-        assert child_collection.parent_id == root_collection.id
+        assert isinstance(child_collection.uuid, uuid.UUID)
+        assert isinstance(child_collection.parent_uuid, uuid.UUID)
+        assert child_collection.parent_uuid == root_collection.uuid
 
         # Verify relationships
-        assert child_collection.parent.id == root_collection.id
-        assert root_collection.subcollections.first().id == child_collection.id
-        assert root_collection.owner.id == user.id
+        assert child_collection.parent.uuid == root_collection.uuid
+        assert root_collection.subcollections.first().uuid == child_collection.uuid
+        assert root_collection.owner.uuid == user.uuid
 
     def test_create_visibility_profile_for_file(self, db_session):
         """Test creating visibility profile linked to a file/document."""
@@ -362,7 +365,7 @@ class TestCRUDOperations:
         user = User(
             username="testuser",
             email="test@example.com",
-            org_id=org.id
+            org_uuid=org.uuid
         )
         db_session.add(user)
         db_session.flush()
@@ -371,8 +374,8 @@ class TestCRUDOperations:
         document = Document(
             title="Test Document",
             content=content,
-            owner_id=user.id,
-            org_id=org.id,
+            owner_uuid=user.uuid,
+            org_uuid=org.uuid,
             document_type="text",
             status="draft",
             filename="test.txt",
@@ -387,9 +390,9 @@ class TestCRUDOperations:
         profile = VisibilityProfile(
             name="File Visibility Profile",
             description="Controls entity visibility for test file",
-            owner_id=user.id,
-            file_id=document.id,
-            collection_id=None,
+            owner_uuid=user.uuid,
+            file_uuid=document.uuid,
+            collection_uuid=None,
             version_id="DEFAULT",
             profile_type="FILE",
             visible_entity_types=["Person", "Organization"],
@@ -407,10 +410,10 @@ class TestCRUDOperations:
         db_session.flush()
 
         assert profile.id is not None
-        assert isinstance(profile.id, uuid.UUID)
-        assert isinstance(profile.file_id, uuid.UUID)
-        assert profile.file_id == document.id
-        assert profile.collection_id is None
+        assert isinstance(profile.uuid, uuid.UUID)
+        assert isinstance(profile.file_uuid, uuid.UUID)
+        assert profile.file_uuid == document.uuid
+        assert profile.collection_uuid is None
         assert profile.profile_type == "FILE"
         assert profile.auto_include_new is True
         assert profile.is_active is True
@@ -418,8 +421,8 @@ class TestCRUDOperations:
         assert profile.enabled_entities == ["Person", "Organization"]
 
         # Verify relationships
-        assert profile.owner.id == user.id
-        assert profile.document.id == document.id
+        assert profile.owner.uuid == user.uuid
+        assert profile.document.uuid == document.uuid
 
     def test_create_visibility_profile_for_collection(self, db_session):
         """Test creating visibility profile linked to a collection."""
@@ -431,7 +434,7 @@ class TestCRUDOperations:
         user = User(
             username="testuser",
             email="test@example.com",
-            org_id=org.id
+            org_uuid=org.uuid
         )
         db_session.add(user)
         db_session.flush()
@@ -439,8 +442,8 @@ class TestCRUDOperations:
         collection = Collection(
             name="Test Collection",
             description="Test collection for visibility",
-            owner_id=user.id,
-            org_id=org.id,
+            owner_uuid=user.uuid,
+            org_uuid=org.uuid,
             is_deleted=False
         )
         db_session.add(collection)
@@ -450,9 +453,9 @@ class TestCRUDOperations:
         profile = VisibilityProfile(
             name="Collection Visibility Profile",
             description="Controls entity visibility for test collection",
-            owner_id=user.id,
-            file_id=None,
-            collection_id=collection.id,
+            owner_uuid=user.uuid,
+            file_uuid=None,
+            collection_uuid=collection.uuid,
             version_id=str(collection.id),
             profile_type="COLLECTION",
             visible_entity_types=["Person"],
@@ -470,15 +473,15 @@ class TestCRUDOperations:
         db_session.flush()
 
         assert profile.id is not None
-        assert isinstance(profile.collection_id, uuid.UUID)
-        assert profile.collection_id == collection.id
-        assert profile.file_id is None
+        assert isinstance(profile.collection_uuid, uuid.UUID)
+        assert profile.collection_uuid == collection.uuid
+        assert profile.file_uuid is None
         assert profile.profile_type == "COLLECTION"
         assert profile.version_id == str(collection.id)
         assert profile.auto_include_new is False
 
         # Verify relationships
-        assert profile.collection.id == collection.id
+        assert profile.collection.uuid == collection.uuid
 
     def test_collection_soft_delete(self, db_session):
         """Test soft delete functionality for collections."""
@@ -490,7 +493,7 @@ class TestCRUDOperations:
         user = User(
             username="testuser",
             email="test@example.com",
-            org_id=org.id
+            org_uuid=org.uuid
         )
         db_session.add(user)
         db_session.flush()
@@ -499,8 +502,8 @@ class TestCRUDOperations:
         collection = Collection(
             name="Test Collection",
             description="Collection to be soft deleted",
-            owner_id=user.id,
-            org_id=org.id,
+            owner_uuid=user.uuid,
+            org_uuid=org.uuid,
             is_deleted=False,
             deleted_at=None
         )
@@ -527,7 +530,7 @@ class TestCRUDOperations:
         # Verify we can query to exclude soft-deleted items
         active_collections = db_session.query(Collection).filter_by(
             is_deleted=False,
-            owner_id=user.id
+            owner_uuid=user.uuid
         ).all()
         assert len(active_collections) == 0
 
@@ -541,7 +544,7 @@ class TestCRUDOperations:
         user = User(
             username="testuser",
             email="test@example.com",
-            org_id=org.id
+            org_uuid=org.uuid
         )
         db_session.add(user)
         db_session.flush()
@@ -550,7 +553,7 @@ class TestCRUDOperations:
         profile = VisibilityProfile(
             name="Original Profile",
             description="Original description",
-            owner_id=user.id,
+            owner_uuid=user.uuid,
             profile_type="GLOBAL",
             visible_entity_types=["Person"],
             enabled_entities=["Person"],
@@ -574,4 +577,4 @@ class TestCRUDOperations:
         assert updated_profile.name == "Updated Profile"
         assert updated_profile.enabled_entities == ["Person", "Organization", "Location"]
         assert updated_profile.is_active is False
-        assert updated_profile.owner_id == user.id  # Foreign key unchanged
+        assert updated_profile.owner_uuid == user.uuid  # Foreign key unchanged
