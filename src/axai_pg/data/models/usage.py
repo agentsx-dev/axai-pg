@@ -117,7 +117,27 @@ class LLMModelPricing(DualIdMixin, Base):
     """
     __tablename__ = 'llm_model_pricing'
 
-    # TODO: Implement fields in US-003
+    # Model Identification
+    model_name = Column(String(100), nullable=False, unique=True)
+    model_provider = Column(String(50), nullable=True)
+
+    # Pricing (cost per 1,000 tokens)
+    input_cost_per_1k = Column(Numeric(10, 6), nullable=False)
+    output_cost_per_1k = Column(Numeric(10, 6), nullable=False)
+
+    # Validity Period
+    effective_from = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    effective_until = Column(DateTime(timezone=True), nullable=True)
+
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
+
+    # Table Constraints
+    __table_args__ = (
+        Index('idx_llm_model_pricing_model_name', 'model_name'),
+        Index('idx_llm_model_pricing_effective_period', 'effective_from', 'effective_until'),
+    )
 
     def __repr__(self):
-        return f"<LLMModelPricing(uuid={self.uuid}, id='{self.id}')>"
+        return f"<LLMModelPricing(uuid={self.uuid}, id='{self.id}', model_name='{self.model_name}')>"
