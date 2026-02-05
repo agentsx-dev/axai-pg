@@ -29,6 +29,9 @@ class Organization(DualIdMixin, Base):
     documents = relationship("Document", back_populates="organization", lazy="dynamic", cascade="all, delete-orphan")
     collections = relationship("Collection", back_populates="organization", lazy="dynamic", cascade="all, delete-orphan")
 
+    # LLM Usage Tracking
+    llm_usage_records = relationship("LLMUsage", back_populates="organization", lazy="dynamic")
+
     # Table Constraints
     __table_args__ = (
         CheckConstraint("length(trim(name)) > 0", name="organizations_name_not_empty"),

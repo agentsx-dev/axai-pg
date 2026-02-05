@@ -62,6 +62,9 @@ class User(DualIdMixin, Base):
         lazy="select"
     )
 
+    # LLM Usage Tracking
+    llm_usage_records = relationship("LLMUsage", back_populates="user", lazy="dynamic")
+
     # Table Constraints
     __table_args__ = (
         CheckConstraint("length(trim(username)) > 0", name="users_username_not_empty"),

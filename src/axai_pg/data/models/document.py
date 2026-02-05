@@ -144,6 +144,9 @@ class Document(DualIdMixin, Base):
     collection_contexts = relationship("DocumentCollectionContext", back_populates="document", lazy="dynamic", cascade="all, delete-orphan")
     default_visibility_profile = relationship("VisibilityProfile", foreign_keys=[default_visibility_profile_uuid])
 
+    # LLM Usage Tracking
+    llm_usage_records = relationship("LLMUsage", back_populates="document", lazy="dynamic", cascade="all, delete-orphan")
+
     # Document Chunking Relationships (self-referential)
     # - chunks: Get child chunks from parent document (lazy load - could be many)
     # - parent_document: Get parent document from chunk (eager load via selectin)
