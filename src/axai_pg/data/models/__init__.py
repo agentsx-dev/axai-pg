@@ -30,6 +30,7 @@ from .collection import (
 )
 from .token import Token
 from .feedback import Feedback
+from .usage import LLMUsage, LLMModelPricing
 
 __all__ = [
     'Base',
@@ -63,4 +64,6 @@ __all__ = [
     'VisibilityProfile',
     'Token',
     'Feedback',
+    'LLMUsage',
+    'LLMModelPricing',
 ]
