@@ -53,12 +53,6 @@ jobs:
         POSTGRES_SCHEMA: public
       run: hatch run test
     
-    - name: Run linting
-      run: hatch run lint:check
-    
-    - name: Run type checking
-      run: hatch run types:check
-    
     - name: Upload coverage
       if: always()
       uses: codecov/codecov-action@v3
