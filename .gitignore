@@ -53,6 +53,7 @@ logs/
 
 # Coverage
 .coverage
+coverage.xml
 htmlcov/
 
 # Documentation
