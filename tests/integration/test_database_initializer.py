@@ -7,11 +7,12 @@ DatabaseManager.
 """
 
 import pytest
-import os
-from pathlib import Path
-from sqlalchemy import create_engine, text, inspect
+from sqlalchemy import create_engine, text
 
-from src.axai_pg.utils.db_initializer import DatabaseInitializer, DatabaseInitializerConfig
+from src.axai_pg.utils.db_initializer import (
+    DatabaseInitializer,
+    DatabaseInitializerConfig,
+)
 from src.axai_pg.data.config.database import PostgresConnectionConfig
 
 
@@ -26,11 +27,11 @@ class TestDatabaseInitializer:
         # Use localhost since tests run outside Docker
         # Match the credentials from docker-compose.standalone-test.yml
         return PostgresConnectionConfig(
-            host='localhost',
+            host="localhost",
             port=5432,
-            database='test_init_db',  # Unique name for initializer tests
-            username='test_user',
-            password='test_password'
+            database="test_init_db",  # Unique name for initializer tests
+            username="test_user",
+            password="test_password",
         )
 
     def test_initializer_with_sqlalchemy_default(self, test_db_config):
@@ -38,7 +39,7 @@ class TestDatabaseInitializer:
         config = DatabaseInitializerConfig(
             connection_config=test_db_config,
             auto_create_db=True,
-            auto_drop_on_exit=True
+            auto_drop_on_exit=True,
         )
 
         with DatabaseInitializer(config) as db_init:
@@ -49,13 +50,15 @@ class TestDatabaseInitializer:
             # Verify tables exist using session_scope
             with db_init.session_scope() as session:
                 # Query pg_catalog to list tables
-                result = session.execute(text(
-                    "SELECT tablename FROM pg_catalog.pg_tables "
-                    "WHERE schemaname = 'public'"
-                ))
+                result = session.execute(
+                    text(
+                        "SELECT tablename FROM pg_catalog.pg_tables "
+                        "WHERE schemaname = 'public'"
+                    )
+                )
                 tables = [row[0] for row in result]
 
-                expected_tables = ['organizations', 'users', 'documents']
+                expected_tables = ["organizations", "users", "documents"]
                 for table in expected_tables:
                     assert table in tables, f"Table {table} should exist"
 
@@ -69,22 +72,26 @@ class TestDatabaseInitializer:
         with admin_engine.connect() as conn:
             result = conn.execute(
                 text("SELECT 1 FROM pg_database WHERE datname = :dbname"),
-                {"dbname": test_db_config.database}
+                {"dbname": test_db_config.database},
             )
-            assert result.scalar() is None, "Database should be dropped after context exit"
+            assert (
+                result.scalar() is None
+            ), "Database should be dropped after context exit"
         admin_engine.dispose()
 
     def test_initializer_with_sql_file(self, test_db_config):
         """Test DatabaseInitializer with SQL file approach (backward compatibility)."""
         # Skip this test since SQL files are deprecated and have syntax issues
-        pytest.skip("SQL file approach is deprecated - SQLAlchemy is the recommended approach")
+        pytest.skip(
+            "SQL file approach is deprecated - SQLAlchemy is the recommended approach"
+        )
 
     def test_context_manager_auto_cleanup(self, test_db_config):
         """Test that context manager with auto_drop_on_exit=True cleans up."""
         config = DatabaseInitializerConfig(
             connection_config=test_db_config,
             auto_create_db=True,
-            auto_drop_on_exit=True
+            auto_drop_on_exit=True,
         )
 
         # Use context manager
@@ -102,7 +109,7 @@ class TestDatabaseInitializer:
         with admin_engine.connect() as conn:
             result = conn.execute(
                 text("SELECT 1 FROM pg_database WHERE datname = :dbname"),
-                {"dbname": test_db_config.database}
+                {"dbname": test_db_config.database},
             )
             assert result.scalar() is None, "Database should be dropped"
         admin_engine.dispose()
@@ -112,7 +119,7 @@ class TestDatabaseInitializer:
         config = DatabaseInitializerConfig(
             connection_config=test_db_config,
             auto_create_db=True,
-            auto_drop_on_exit=False
+            auto_drop_on_exit=False,
         )
 
         try:
@@ -129,7 +136,7 @@ class TestDatabaseInitializer:
             with admin_engine.connect() as conn:
                 result = conn.execute(
                     text("SELECT 1 FROM pg_database WHERE datname = :dbname"),
-                    {"dbname": test_db_config.database}
+                    {"dbname": test_db_config.database},
                 )
                 assert result.scalar() is not None, "Database should still exist"
             admin_engine.dispose()
@@ -137,8 +144,7 @@ class TestDatabaseInitializer:
         finally:
             # Clean up manually
             cleanup_config = DatabaseInitializerConfig(
-                connection_config=test_db_config,
-                auto_drop_on_exit=False
+                connection_config=test_db_config, auto_drop_on_exit=False
             )
             cleanup_init = DatabaseInitializer(cleanup_config)
             cleanup_init.drop_database()
@@ -148,7 +154,7 @@ class TestDatabaseInitializer:
         config = DatabaseInitializerConfig(
             connection_config=test_db_config,
             auto_create_db=True,
-            auto_drop_on_exit=True
+            auto_drop_on_exit=True,
         )
 
         with DatabaseInitializer(config) as db_init:
@@ -157,16 +163,24 @@ class TestDatabaseInitializer:
 
             # Verify all expected tables exist using session_scope
             with db_init.session_scope() as session:
-                result = session.execute(text(
-                    "SELECT tablename FROM pg_catalog.pg_tables "
-                    "WHERE schemaname = 'public'"
-                ))
+                result = session.execute(
+                    text(
+                        "SELECT tablename FROM pg_catalog.pg_tables "
+                        "WHERE schemaname = 'public'"
+                    )
+                )
                 tables = set(row[0] for row in result)
 
                 expected_tables = {
-                    'organizations', 'users', 'documents', 'document_versions',
-                    'summaries', 'topics', 'document_topics', 'graph_entities',
-                    'graph_relationships'
+                    "organizations",
+                    "users",
+                    "documents",
+                    "document_versions",
+                    "summaries",
+                    "topics",
+                    "document_topics",
+                    "graph_entities",
+                    "graph_relationships",
                 }
 
                 missing_tables = expected_tables - tables
@@ -177,7 +191,7 @@ class TestDatabaseInitializer:
         config = DatabaseInitializerConfig(
             connection_config=test_db_config,
             auto_create_db=True,
-            auto_drop_on_exit=True
+            auto_drop_on_exit=True,
         )
 
         with DatabaseInitializer(config) as db_init:
@@ -193,7 +207,7 @@ class TestDatabaseInitializer:
         config = DatabaseInitializerConfig(
             connection_config=test_db_config,
             auto_create_db=True,
-            auto_drop_on_exit=True
+            auto_drop_on_exit=True,
         )
 
         with DatabaseInitializer(config) as db_init:
@@ -214,7 +228,7 @@ class TestDatabaseInitializer:
         config = DatabaseInitializerConfig(
             connection_config=test_db_config,
             auto_create_db=False,  # Manual control
-            auto_drop_on_exit=True
+            auto_drop_on_exit=True,
         )
 
         with DatabaseInitializer(config) as db_init:

@@ -7,9 +7,12 @@ with all PostgreSQL-specific features (extensions, triggers, constraints, indexe
 
 import pytest
 from sqlalchemy import text, inspect
-from src.axai_pg.data.models import Organization, User, Document, DocumentVersion, Summary, Topic, DocumentTopic
-from src.axai_pg.data.models.graph import GraphEntity, GraphRelationship
-from src.axai_pg.data.models.collection import Collection, VisibilityProfile
+from src.axai_pg.data.models import (
+    Organization,
+    User,
+    Document,
+)
+from src.axai_pg.data.models.collection import VisibilityProfile
 
 
 @pytest.mark.integration
@@ -23,22 +26,22 @@ class TestSchemaCreation:
         tables = inspector.get_table_names()
 
         expected_tables = [
-            'organizations',
-            'users',
-            'documents',
-            'document_versions',
-            'summaries',
-            'topics',
-            'document_topics',
-            'graph_entities',
-            'graph_relationships',
-            'collections',
-            'collection_entities',
-            'collection_relationships',
-            'visibility_profiles',
-            'entity_links',
-            'entity_operations',
-            'document_collection_contexts',
+            "organizations",
+            "users",
+            "documents",
+            "document_versions",
+            "summaries",
+            "topics",
+            "document_topics",
+            "graph_entities",
+            "graph_relationships",
+            "collections",
+            "collection_entities",
+            "collection_relationships",
+            "visibility_profiles",
+            "entity_links",
+            "entity_operations",
+            "document_collection_contexts",
         ]
 
         for table in expected_tables:
@@ -46,9 +49,11 @@ class TestSchemaCreation:
 
     def test_uuid_extension_exists(self, db_session):
         """Test that the uuid-ossp extension is installed."""
-        result = db_session.execute(text(
-            "SELECT EXISTS(SELECT 1 FROM pg_extension WHERE extname = 'uuid-ossp')"
-        ))
+        result = db_session.execute(
+            text(
+                "SELECT EXISTS(SELECT 1 FROM pg_extension WHERE extname = 'uuid-ossp')"
+            )
+        )
         assert result.scalar() is True, "uuid-ossp extension should be installed"
 
     def test_uuid_columns_exist(self, db_session):
@@ -56,40 +61,46 @@ class TestSchemaCreation:
         inspector = inspect(db_session.bind)
 
         # Check organizations table - uuid is the primary key
-        org_columns = {col['name']: col for col in inspector.get_columns('organizations')}
-        assert 'uuid' in org_columns
-        assert 'UUID' in str(org_columns['uuid']['type'])
+        org_columns = {
+            col["name"]: col for col in inspector.get_columns("organizations")
+        }
+        assert "uuid" in org_columns
+        assert "UUID" in str(org_columns["uuid"]["type"])
 
         # Check users table
-        user_columns = {col['name']: col for col in inspector.get_columns('users')}
-        assert 'uuid' in user_columns
-        assert 'UUID' in str(user_columns['uuid']['type'])
-        assert 'org_uuid' in user_columns
-        assert 'UUID' in str(user_columns['org_uuid']['type'])
+        user_columns = {col["name"]: col for col in inspector.get_columns("users")}
+        assert "uuid" in user_columns
+        assert "UUID" in str(user_columns["uuid"]["type"])
+        assert "org_uuid" in user_columns
+        assert "UUID" in str(user_columns["org_uuid"]["type"])
 
     def test_timestamp_trigger_function_exists(self, db_session):
         """Test that the update_modified_column trigger function exists."""
-        result = db_session.execute(text(
-            "SELECT EXISTS(SELECT 1 FROM pg_proc WHERE proname = 'update_modified_column')"
-        ))
+        result = db_session.execute(
+            text(
+                "SELECT EXISTS(SELECT 1 FROM pg_proc WHERE proname = 'update_modified_column')"
+            )
+        )
         assert result.scalar() is True, "update_modified_column function should exist"
 
     def test_timestamp_triggers_exist(self, db_session):
         """Test that timestamp triggers are created for tables."""
         tables_with_triggers = [
-            'organizations',
-            'users',
-            'documents',
-            'summaries',
-            'topics',
-            'collections',
-            'visibility_profiles',
+            "organizations",
+            "users",
+            "documents",
+            "summaries",
+            "topics",
+            "collections",
+            "visibility_profiles",
         ]
 
         for table in tables_with_triggers:
-            result = db_session.execute(text(
-                f"SELECT EXISTS(SELECT 1 FROM pg_trigger WHERE tgname = 'update_{table}_modtime')"
-            ))
+            result = db_session.execute(
+                text(
+                    f"SELECT EXISTS(SELECT 1 FROM pg_trigger WHERE tgname = 'update_{table}_modtime')"
+                )
+            )
             assert result.scalar() is True, f"Trigger for {table} should exist"
 
     def test_timestamp_trigger_works(self, test_engine):
@@ -111,7 +122,6 @@ class TestSchemaCreation:
             session.add(org)
             session.commit()
 
-            org_id = org.id
             original_updated_at = org.updated_at
 
             # Wait to ensure timestamp difference
@@ -124,8 +134,9 @@ class TestSchemaCreation:
             # Refresh to get new timestamp from database
             session.refresh(org)
 
-            assert org.updated_at > original_updated_at, \
-                f"updated_at should be automatically updated by trigger. Original: {original_updated_at}, New: {org.updated_at}"
+            assert (
+                org.updated_at > original_updated_at
+            ), f"updated_at should be automatically updated by trigger. Original: {original_updated_at}, New: {org.updated_at}"
 
         finally:
             # Clean up - delete the test org
@@ -144,7 +155,10 @@ class TestSchemaCreation:
         with pytest.raises(Exception) as exc_info:
             db_session.commit()
 
-        assert "organizations_name_not_empty" in str(exc_info.value) or "check constraint" in str(exc_info.value).lower()
+        assert (
+            "organizations_name_not_empty" in str(exc_info.value)
+            or "check constraint" in str(exc_info.value).lower()
+        )
         db_session.rollback()
 
     def test_check_constraint_users_email(self, db_session):
@@ -161,7 +175,10 @@ class TestSchemaCreation:
         with pytest.raises(Exception) as exc_info:
             db_session.commit()
 
-        assert "users_email_valid" in str(exc_info.value) or "check constraint" in str(exc_info.value).lower()
+        assert (
+            "users_email_valid" in str(exc_info.value)
+            or "check constraint" in str(exc_info.value).lower()
+        )
         db_session.rollback()
 
     def test_check_constraint_documents_status(self, db_session):
@@ -187,14 +204,17 @@ class TestSchemaCreation:
             filename="test.txt",
             file_path="/test/path/test.txt",
             size=len(content),
-            content_type="text/plain"
+            content_type="text/plain",
         )
         db_session.add(doc)
 
         with pytest.raises(Exception) as exc_info:
             db_session.commit()
 
-        assert "documents_valid_status" in str(exc_info.value) or "check constraint" in str(exc_info.value).lower()
+        assert (
+            "documents_valid_status" in str(exc_info.value)
+            or "check constraint" in str(exc_info.value).lower()
+        )
         db_session.rollback()
 
     def test_check_constraint_documents_version(self, db_session):
@@ -220,14 +240,17 @@ class TestSchemaCreation:
             filename="test.txt",
             file_path="/test/path/test.txt",
             size=len(content),
-            content_type="text/plain"
+            content_type="text/plain",
         )
         db_session.add(doc)
 
         with pytest.raises(Exception) as exc_info:
             db_session.commit()
 
-        assert "documents_valid_version" in str(exc_info.value) or "check constraint" in str(exc_info.value).lower()
+        assert (
+            "documents_valid_version" in str(exc_info.value)
+            or "check constraint" in str(exc_info.value).lower()
+        )
         db_session.rollback()
 
     def test_indexes_exist(self, db_session):
@@ -235,13 +258,13 @@ class TestSchemaCreation:
         inspector = inspect(db_session.bind)
 
         # Check some key indexes exist
-        doc_indexes = {idx['name']: idx for idx in inspector.get_indexes('documents')}
+        doc_indexes = {idx["name"]: idx for idx in inspector.get_indexes("documents")}
 
         expected_indexes = [
-            'idx_documents_org_uuid',
-            'idx_documents_owner_uuid',
-            'idx_documents_type',
-            'idx_documents_status',
+            "idx_documents_org_uuid",
+            "idx_documents_owner_uuid",
+            "idx_documents_type",
+            "idx_documents_status",
         ]
 
         for idx_name in expected_indexes:
@@ -252,13 +275,15 @@ class TestSchemaCreation:
         inspector = inspect(db_session.bind)
 
         # Check users table has FK to organizations
-        user_fks = inspector.get_foreign_keys('users')
+        user_fks = inspector.get_foreign_keys("users")
         assert len(user_fks) > 0, "Users should have foreign keys"
-        org_fk = next((fk for fk in user_fks if 'organizations' in fk['referred_table']), None)
+        org_fk = next(
+            (fk for fk in user_fks if "organizations" in fk["referred_table"]), None
+        )
         assert org_fk is not None, "Users should have FK to organizations"
 
         # Check documents table has FKs to users and organizations
-        doc_fks = inspector.get_foreign_keys('documents')
+        doc_fks = inspector.get_foreign_keys("documents")
         assert len(doc_fks) >= 2, "Documents should have multiple foreign keys"
 
     def test_cascade_delete_works(self, db_session):
@@ -283,7 +308,7 @@ class TestSchemaCreation:
             filename="test_doc.txt",
             file_path="/test/path/test_doc.txt",
             size=len(content),
-            content_type="text/plain"
+            content_type="text/plain",
         )
         db_session.add(doc)
         db_session.commit()
@@ -310,13 +335,18 @@ class TestSchemaCreation:
         db_session.commit()
 
         # Try to create user with same username
-        user2 = User(username="testuser", email="different@example.com", org_uuid=org.uuid)
+        user2 = User(
+            username="testuser", email="different@example.com", org_uuid=org.uuid
+        )
         db_session.add(user2)
 
         with pytest.raises(Exception) as exc_info:
             db_session.commit()
 
-        assert "unique" in str(exc_info.value).lower() or "duplicate" in str(exc_info.value).lower()
+        assert (
+            "unique" in str(exc_info.value).lower()
+            or "duplicate" in str(exc_info.value).lower()
+        )
         db_session.rollback()
 
     def test_jsonb_columns_work(self, db_session):
@@ -342,47 +372,68 @@ class TestSchemaCreation:
             filename="test_doc.txt",
             file_path="/test/path/test_doc.txt",
             size=len(content),
-            content_type="text/plain"
+            content_type="text/plain",
         )
         db_session.add(doc)
         db_session.commit()
 
         # Retrieve and verify
         retrieved_doc = db_session.query(Document).filter_by(id=doc.id).first()
-        assert retrieved_doc.document_metadata == {"key": "value", "nested": {"data": 123}}
+        assert retrieved_doc.document_metadata == {
+            "key": "value",
+            "nested": {"data": 123},
+        }
 
     def test_collection_parent_foreign_key(self, db_session):
         """Test that collection self-referential FK is properly created."""
         inspector = inspect(db_session.bind)
 
         # Check parent_uuid column exists
-        collection_columns = {col['name']: col for col in inspector.get_columns('collections')}
-        assert 'parent_uuid' in collection_columns, "Collections should have parent_uuid column"
-        assert 'UUID' in str(collection_columns['parent_uuid']['type'])
+        collection_columns = {
+            col["name"]: col for col in inspector.get_columns("collections")
+        }
+        assert (
+            "parent_uuid" in collection_columns
+        ), "Collections should have parent_uuid column"
+        assert "UUID" in str(collection_columns["parent_uuid"]["type"])
 
         # Check self-referential FK exists
-        collection_fks = inspector.get_foreign_keys('collections')
-        parent_fk = next((fk for fk in collection_fks if 'collections' in fk['referred_table']), None)
+        collection_fks = inspector.get_foreign_keys("collections")
+        parent_fk = next(
+            (fk for fk in collection_fks if "collections" in fk["referred_table"]), None
+        )
         assert parent_fk is not None, "Collections should have self-referential FK"
-        assert 'parent_uuid' in parent_fk['constrained_columns']
+        assert "parent_uuid" in parent_fk["constrained_columns"]
 
     def test_visibility_profile_foreign_keys(self, db_session):
         """Test that visibility_profile FKs are properly created."""
         inspector = inspect(db_session.bind)
 
         # Check file_uuid and collection_uuid columns exist
-        vp_columns = {col['name']: col for col in inspector.get_columns('visibility_profiles')}
-        assert 'file_uuid' in vp_columns, "VisibilityProfile should have file_uuid column"
-        assert 'collection_uuid' in vp_columns, "VisibilityProfile should have collection_uuid column"
-        assert 'UUID' in str(vp_columns['file_uuid']['type'])
-        assert 'UUID' in str(vp_columns['collection_uuid']['type'])
+        vp_columns = {
+            col["name"]: col for col in inspector.get_columns("visibility_profiles")
+        }
+        assert (
+            "file_uuid" in vp_columns
+        ), "VisibilityProfile should have file_uuid column"
+        assert (
+            "collection_uuid" in vp_columns
+        ), "VisibilityProfile should have collection_uuid column"
+        assert "UUID" in str(vp_columns["file_uuid"]["type"])
+        assert "UUID" in str(vp_columns["collection_uuid"]["type"])
 
         # Check FKs exist
-        vp_fks = inspector.get_foreign_keys('visibility_profiles')
-        file_fk = next((fk for fk in vp_fks if 'documents' in fk['referred_table']), None)
-        collection_fk = next((fk for fk in vp_fks if 'collections' in fk['referred_table']), None)
+        vp_fks = inspector.get_foreign_keys("visibility_profiles")
+        file_fk = next(
+            (fk for fk in vp_fks if "documents" in fk["referred_table"]), None
+        )
+        collection_fk = next(
+            (fk for fk in vp_fks if "collections" in fk["referred_table"]), None
+        )
         assert file_fk is not None, "VisibilityProfile should have FK to documents"
-        assert collection_fk is not None, "VisibilityProfile should have FK to collections"
+        assert (
+            collection_fk is not None
+        ), "VisibilityProfile should have FK to collections"
 
     def test_check_constraint_visibility_profile_type(self, db_session):
         """Test that visibility profile type check constraint works."""
@@ -399,15 +450,17 @@ class TestSchemaCreation:
         profile = VisibilityProfile(
             name="Test Profile",
             owner_uuid=user.uuid,
-            profile_type="INVALID_TYPE"  # Not in ('FILE', 'COLLECTION', 'GLOBAL')
+            profile_type="INVALID_TYPE",  # Not in ('FILE', 'COLLECTION', 'GLOBAL')
         )
         db_session.add(profile)
 
         with pytest.raises(Exception) as exc_info:
             db_session.commit()
 
-        assert "visibility_profiles_valid_profile_type" in str(exc_info.value) or \
-               "check constraint" in str(exc_info.value).lower()
+        assert (
+            "visibility_profiles_valid_profile_type" in str(exc_info.value)
+            or "check constraint" in str(exc_info.value).lower()
+        )
         db_session.rollback()
 
     def test_json_columns_visibility_profile(self, db_session):
@@ -430,13 +483,15 @@ class TestSchemaCreation:
             all_entities=["Person", "Organization", "Location"],
             enabled_entities=["Person"],
             all_relationships=["works_for", "knows"],
-            enabled_relationships=["knows"]
+            enabled_relationships=["knows"],
         )
         db_session.add(profile)
         db_session.flush()
 
         # Retrieve and verify JSON fields
-        retrieved_profile = db_session.query(VisibilityProfile).filter_by(id=profile.id).first()
+        retrieved_profile = (
+            db_session.query(VisibilityProfile).filter_by(id=profile.id).first()
+        )
         assert retrieved_profile.visible_entity_types == ["Person", "Organization"]
         assert retrieved_profile.all_entities == ["Person", "Organization", "Location"]
         assert retrieved_profile.enabled_entities == ["Person"]
@@ -445,11 +500,13 @@ class TestSchemaCreation:
 
     def test_table_comments_exist(self, db_session):
         """Test that table comments are added."""
-        result = db_session.execute(text(
-            """
+        result = db_session.execute(
+            text(
+                """
             SELECT obj_description('organizations'::regclass)
             """
-        ))
+            )
+        )
         comment = result.scalar()
         assert comment is not None, "Organizations table should have a comment"
         assert "tenant" in comment.lower() or "b2b" in comment.lower()

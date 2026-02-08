@@ -2,8 +2,11 @@
 AXAI PostgreSQL Models Package
 """
 
-from .data.config.database import DatabaseManager, PostgresConnectionConfig
-from .data.models import (
+from .data.config.database import (  # noqa: F401
+    DatabaseManager,
+    PostgresConnectionConfig,
+)
+from .data.models import (  # noqa: F401
     Organization,
     User,
     Document,

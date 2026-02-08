@@ -6,11 +6,10 @@ and manages PostgreSQL-specific schema features (extensions, triggers, indexes, 
 """
 
 import pytest
-from sqlalchemy import create_engine, text, inspect
+from sqlalchemy import text, inspect
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.axai_pg.utils.schema_builder import PostgreSQLSchemaBuilder
-from src.axai_pg.data.config.database import Base
 
 
 @pytest.mark.integration
@@ -30,24 +29,30 @@ class TestPostgreSQLSchemaBuilder:
         inspector = inspect(test_engine)
         tables = inspector.get_table_names()
         assert len(tables) > 0, "Should have created tables"
-        assert 'organizations' in tables
-        assert 'users' in tables
-        assert 'documents' in tables
+        assert "organizations" in tables
+        assert "users" in tables
+        assert "documents" in tables
 
         # Verify extension exists
         with test_engine.connect() as conn:
-            result = conn.execute(text(
-                "SELECT EXISTS(SELECT 1 FROM pg_extension WHERE extname = 'uuid-ossp')"
-            ))
+            result = conn.execute(
+                text(
+                    "SELECT EXISTS(SELECT 1 FROM pg_extension WHERE extname = 'uuid-ossp')"
+                )
+            )
             assert result.scalar() is True, "uuid-ossp extension should exist"
             conn.commit()
 
         # Verify trigger function exists
         with test_engine.connect() as conn:
-            result = conn.execute(text(
-                "SELECT EXISTS(SELECT 1 FROM pg_proc WHERE proname = 'update_modified_column')"
-            ))
-            assert result.scalar() is True, "update_modified_column function should exist"
+            result = conn.execute(
+                text(
+                    "SELECT EXISTS(SELECT 1 FROM pg_proc WHERE proname = 'update_modified_column')"
+                )
+            )
+            assert (
+                result.scalar() is True
+            ), "update_modified_column function should exist"
             conn.commit()
 
     def test_build_schema_is_idempotent(self, test_engine):
@@ -59,8 +64,8 @@ class TestPostgreSQLSchemaBuilder:
         # Verify schema still intact
         inspector = inspect(test_engine)
         tables = inspector.get_table_names()
-        assert 'organizations' in tables
-        assert 'users' in tables
+        assert "organizations" in tables
+        assert "users" in tables
 
     def test_drop_complete_schema(self, test_engine):
         """Test that drop_complete_schema removes all tables and functions."""
@@ -77,10 +82,14 @@ class TestPostgreSQLSchemaBuilder:
 
         # Verify trigger function is gone
         with test_engine.connect() as conn:
-            result = conn.execute(text(
-                "SELECT EXISTS(SELECT 1 FROM pg_proc WHERE proname = 'update_modified_column')"
-            ))
-            assert result.scalar() is False, "update_modified_column function should be dropped"
+            result = conn.execute(
+                text(
+                    "SELECT EXISTS(SELECT 1 FROM pg_proc WHERE proname = 'update_modified_column')"
+                )
+            )
+            assert (
+                result.scalar() is False
+            ), "update_modified_column function should be dropped"
             conn.commit()
 
         # Rebuild for other tests
@@ -98,9 +107,11 @@ class TestPostgreSQLSchemaBuilder:
 
         # Verify extension exists
         with test_engine.connect() as conn:
-            result = conn.execute(text(
-                "SELECT EXISTS(SELECT 1 FROM pg_extension WHERE extname = 'uuid-ossp')"
-            ))
+            result = conn.execute(
+                text(
+                    "SELECT EXISTS(SELECT 1 FROM pg_extension WHERE extname = 'uuid-ossp')"
+                )
+            )
             assert result.scalar() is True, "uuid-ossp extension should be created"
             conn.commit()
 
@@ -108,7 +119,9 @@ class TestPostgreSQLSchemaBuilder:
         """Test that create_update_timestamp_trigger creates the function."""
         # Drop function if exists
         with test_engine.connect() as conn:
-            conn.execute(text("DROP FUNCTION IF EXISTS update_modified_column() CASCADE"))
+            conn.execute(
+                text("DROP FUNCTION IF EXISTS update_modified_column() CASCADE")
+            )
             conn.commit()
 
         # Create trigger function
@@ -116,17 +129,23 @@ class TestPostgreSQLSchemaBuilder:
 
         # Verify function exists
         with test_engine.connect() as conn:
-            result = conn.execute(text(
-                "SELECT EXISTS(SELECT 1 FROM pg_proc WHERE proname = 'update_modified_column')"
-            ))
-            assert result.scalar() is True, "update_modified_column function should exist"
+            result = conn.execute(
+                text(
+                    "SELECT EXISTS(SELECT 1 FROM pg_proc WHERE proname = 'update_modified_column')"
+                )
+            )
+            assert (
+                result.scalar() is True
+            ), "update_modified_column function should exist"
 
             # Verify function returns trigger
-            result = conn.execute(text(
-                "SELECT prorettype::regtype::text FROM pg_proc WHERE proname = 'update_modified_column'"
-            ))
+            result = conn.execute(
+                text(
+                    "SELECT prorettype::regtype::text FROM pg_proc WHERE proname = 'update_modified_column'"
+                )
+            )
             return_type = result.scalar()
-            assert return_type == 'trigger', "Function should return trigger type"
+            assert return_type == "trigger", "Function should return trigger type"
             conn.commit()
 
     def test_create_table_triggers(self, test_engine):
@@ -136,7 +155,11 @@ class TestPostgreSQLSchemaBuilder:
 
         # Drop triggers
         with test_engine.connect() as conn:
-            conn.execute(text("DROP TRIGGER IF EXISTS update_organizations_modtime ON organizations"))
+            conn.execute(
+                text(
+                    "DROP TRIGGER IF EXISTS update_organizations_modtime ON organizations"
+                )
+            )
             conn.execute(text("DROP TRIGGER IF EXISTS update_users_modtime ON users"))
             conn.commit()
 
@@ -145,14 +168,18 @@ class TestPostgreSQLSchemaBuilder:
 
         # Verify triggers exist
         with test_engine.connect() as conn:
-            result = conn.execute(text(
-                "SELECT EXISTS(SELECT 1 FROM pg_trigger WHERE tgname = 'update_organizations_modtime')"
-            ))
+            result = conn.execute(
+                text(
+                    "SELECT EXISTS(SELECT 1 FROM pg_trigger WHERE tgname = 'update_organizations_modtime')"
+                )
+            )
             assert result.scalar() is True, "organizations trigger should exist"
 
-            result = conn.execute(text(
-                "SELECT EXISTS(SELECT 1 FROM pg_trigger WHERE tgname = 'update_users_modtime')"
-            ))
+            result = conn.execute(
+                text(
+                    "SELECT EXISTS(SELECT 1 FROM pg_trigger WHERE tgname = 'update_users_modtime')"
+                )
+            )
             assert result.scalar() is True, "users trigger should exist"
             conn.commit()
 
@@ -172,16 +199,14 @@ class TestPostgreSQLSchemaBuilder:
 
         # Verify comments exist
         with test_engine.connect() as conn:
-            result = conn.execute(text(
-                "SELECT obj_description('organizations'::regclass)"
-            ))
+            result = conn.execute(
+                text("SELECT obj_description('organizations'::regclass)")
+            )
             org_comment = result.scalar()
             assert org_comment is not None, "organizations should have a comment"
-            assert 'tenant' in org_comment.lower() or 'b2b' in org_comment.lower()
+            assert "tenant" in org_comment.lower() or "b2b" in org_comment.lower()
 
-            result = conn.execute(text(
-                "SELECT obj_description('users'::regclass)"
-            ))
+            result = conn.execute(text("SELECT obj_description('users'::regclass)"))
             user_comment = result.scalar()
             assert user_comment is not None, "users should have a comment"
             conn.commit()
@@ -202,11 +227,13 @@ class TestPostgreSQLSchemaBuilder:
 
         # Verify indexes exist
         inspector = inspect(test_engine)
-        doc_indexes = {idx['name'] for idx in inspector.get_indexes('documents')}
-        assert 'idx_documents_org_status' in doc_indexes, "documents org_status index should exist"
+        doc_indexes = {idx["name"] for idx in inspector.get_indexes("documents")}
+        assert (
+            "idx_documents_org_status" in doc_indexes
+        ), "documents org_status index should exist"
 
-        user_indexes = {idx['name'] for idx in inspector.get_indexes('users')}
-        assert 'idx_users_org' in user_indexes, "users org index should exist"
+        user_indexes = {idx["name"] for idx in inspector.get_indexes("users")}
+        assert "idx_users_org" in user_indexes, "users org index should exist"
 
     def test_schema_builder_with_empty_database(self, test_engine):
         """Test that schema builder works starting from completely empty database."""
@@ -225,9 +252,15 @@ class TestPostgreSQLSchemaBuilder:
         tables = inspector.get_table_names()
 
         expected_tables = [
-            'organizations', 'users', 'documents', 'document_versions',
-            'summaries', 'topics', 'document_topics', 'graph_entities',
-            'graph_relationships'
+            "organizations",
+            "users",
+            "documents",
+            "document_versions",
+            "summaries",
+            "topics",
+            "document_topics",
+            "graph_entities",
+            "graph_relationships",
         ]
 
         for table in expected_tables:
@@ -238,7 +271,9 @@ class TestPostgreSQLSchemaBuilder:
         from unittest.mock import patch
 
         # Mock Base.metadata.create_all to raise an exception
-        with patch('src.axai_pg.data.config.database.Base.metadata.create_all') as mock_create:
+        with patch(
+            "src.axai_pg.data.config.database.Base.metadata.create_all"
+        ) as mock_create:
             mock_create.side_effect = SQLAlchemyError("Test error")
 
             # Should raise the exception, not return False

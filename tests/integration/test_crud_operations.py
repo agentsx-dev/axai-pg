@@ -7,7 +7,16 @@ PostgreSQL database, including relationships and queries.
 
 import pytest
 import uuid
-from axai_pg import Organization, User, Document, Summary, Topic, DocumentTopic, Collection, VisibilityProfile
+from axai_pg import (
+    Organization,
+    User,
+    Document,
+    Summary,
+    Topic,
+    DocumentTopic,
+    Collection,
+    VisibilityProfile,
+)
 
 
 @pytest.mark.integration
@@ -30,11 +39,7 @@ class TestCRUDOperations:
         assert org.name == "Test Organization"
 
         # Create user
-        user = User(
-            username="testuser",
-            email="test@example.com",
-            org_uuid=org.uuid
-        )
+        user = User(username="testuser", email="test@example.com", org_uuid=org.uuid)
         db_session.add(user)
         db_session.flush()
 
@@ -55,11 +60,7 @@ class TestCRUDOperations:
         db_session.add(org)
         db_session.flush()
 
-        user = User(
-            username="testuser",
-            email="test@example.com",
-            org_uuid=org.uuid
-        )
+        user = User(username="testuser", email="test@example.com", org_uuid=org.uuid)
         db_session.add(user)
         db_session.flush()
 
@@ -75,7 +76,7 @@ class TestCRUDOperations:
             filename="test_document.txt",
             file_path="/test/path/test_document.txt",
             size=len(content),
-            content_type="text/plain"
+            content_type="text/plain",
         )
         db_session.add(document)
         db_session.flush()
@@ -93,7 +94,7 @@ class TestCRUDOperations:
             content="This is a summary of the test document",
             summary_type="abstract",
             tool_agent="test-agent",
-            confidence_score=0.95
+            confidence_score=0.95,
         )
         db_session.add(summary)
         db_session.flush()
@@ -111,11 +112,7 @@ class TestCRUDOperations:
         db_session.add(org)
         db_session.flush()
 
-        user = User(
-            username="testuser",
-            email="test@example.com",
-            org_uuid=org.uuid
-        )
+        user = User(username="testuser", email="test@example.com", org_uuid=org.uuid)
         db_session.add(user)
         db_session.flush()
 
@@ -130,7 +127,7 @@ class TestCRUDOperations:
             filename="test_document.txt",
             file_path="/test/path/test_document.txt",
             size=len(content),
-            content_type="text/plain"
+            content_type="text/plain",
         )
         db_session.add(document)
         db_session.flush()
@@ -141,7 +138,7 @@ class TestCRUDOperations:
             description="A test topic",
             keywords=["test", "example"],
             extraction_method="manual",
-            global_importance=0.8
+            global_importance=0.8,
         )
         db_session.add(topic)
         db_session.flush()
@@ -156,7 +153,7 @@ class TestCRUDOperations:
             document_uuid=document.uuid,
             topic_uuid=topic.uuid,
             relevance_score=0.9,
-            extracted_by_tool="test-tool"
+            extracted_by_tool="test-tool",
         )
         db_session.add(doc_topic)
         db_session.flush()
@@ -176,11 +173,7 @@ class TestCRUDOperations:
         db_session.add(org)
         db_session.flush()
 
-        user = User(
-            username="testuser",
-            email="test@example.com",
-            org_uuid=org.uuid
-        )
+        user = User(username="testuser", email="test@example.com", org_uuid=org.uuid)
         db_session.add(user)
         db_session.flush()
 
@@ -195,7 +188,7 @@ class TestCRUDOperations:
             filename="test_document.txt",
             file_path="/test/path/test_document.txt",
             size=len(content),
-            content_type="text/plain"
+            content_type="text/plain",
         )
         db_session.add(document)
         db_session.flush()
@@ -218,7 +211,9 @@ class TestCRUDOperations:
         assert isinstance(org_documents[0].uuid, uuid.UUID)
 
         # Get documents owned by user
-        user_documents = db_session.query(Document).filter_by(owner_uuid=user.uuid).all()
+        user_documents = (
+            db_session.query(Document).filter_by(owner_uuid=user.uuid).all()
+        )
         assert len(user_documents) == 1
         assert user_documents[0].uuid == document.uuid
         assert isinstance(user_documents[0].uuid, uuid.UUID)
@@ -233,7 +228,7 @@ class TestCRUDOperations:
         user = User(
             username="original_username",
             email="original@example.com",
-            org_uuid=org.uuid
+            org_uuid=org.uuid,
         )
         db_session.add(user)
         db_session.flush()
@@ -259,11 +254,7 @@ class TestCRUDOperations:
         db_session.add(org)
         db_session.flush()
 
-        user = User(
-            username="testuser",
-            email="test@example.com",
-            org_uuid=org.uuid
-        )
+        user = User(username="testuser", email="test@example.com", org_uuid=org.uuid)
         db_session.add(user)
         db_session.flush()
 
@@ -278,7 +269,7 @@ class TestCRUDOperations:
             filename="original.txt",
             file_path="/test/path/original.txt",
             size=len(original_content),
-            content_type="text/plain"
+            content_type="text/plain",
         )
         db_session.add(document)
         db_session.flush()
@@ -307,11 +298,7 @@ class TestCRUDOperations:
         db_session.add(org)
         db_session.flush()
 
-        user = User(
-            username="testuser",
-            email="test@example.com",
-            org_uuid=org.uuid
-        )
+        user = User(username="testuser", email="test@example.com", org_uuid=org.uuid)
         db_session.add(user)
         db_session.flush()
 
@@ -322,7 +309,7 @@ class TestCRUDOperations:
             owner_uuid=user.uuid,
             org_uuid=org.uuid,
             parent_uuid=None,  # No parent - this is root
-            is_deleted=False
+            is_deleted=False,
         )
         db_session.add(root_collection)
         db_session.flush()
@@ -340,7 +327,7 @@ class TestCRUDOperations:
             owner_uuid=user.uuid,
             org_uuid=org.uuid,
             parent_uuid=root_collection.uuid,
-            is_deleted=False
+            is_deleted=False,
         )
         db_session.add(child_collection)
         db_session.flush()
@@ -362,11 +349,7 @@ class TestCRUDOperations:
         db_session.add(org)
         db_session.flush()
 
-        user = User(
-            username="testuser",
-            email="test@example.com",
-            org_uuid=org.uuid
-        )
+        user = User(username="testuser", email="test@example.com", org_uuid=org.uuid)
         db_session.add(user)
         db_session.flush()
 
@@ -381,7 +364,7 @@ class TestCRUDOperations:
             filename="test.txt",
             file_path="/test/path/test.txt",
             size=len(content),
-            content_type="text/plain"
+            content_type="text/plain",
         )
         db_session.add(document)
         db_session.flush()
@@ -404,7 +387,7 @@ class TestCRUDOperations:
             all_relationships=["works_for", "knows", "located_in"],
             enabled_relationships=["works_for", "knows"],
             auto_include_new=True,
-            is_active=True
+            is_active=True,
         )
         db_session.add(profile)
         db_session.flush()
@@ -431,11 +414,7 @@ class TestCRUDOperations:
         db_session.add(org)
         db_session.flush()
 
-        user = User(
-            username="testuser",
-            email="test@example.com",
-            org_uuid=org.uuid
-        )
+        user = User(username="testuser", email="test@example.com", org_uuid=org.uuid)
         db_session.add(user)
         db_session.flush()
 
@@ -444,7 +423,7 @@ class TestCRUDOperations:
             description="Test collection for visibility",
             owner_uuid=user.uuid,
             org_uuid=org.uuid,
-            is_deleted=False
+            is_deleted=False,
         )
         db_session.add(collection)
         db_session.flush()
@@ -467,7 +446,7 @@ class TestCRUDOperations:
             all_relationships=["knows", "works_for"],
             enabled_relationships=["knows"],
             auto_include_new=False,
-            is_active=True
+            is_active=True,
         )
         db_session.add(profile)
         db_session.flush()
@@ -490,11 +469,7 @@ class TestCRUDOperations:
         db_session.add(org)
         db_session.flush()
 
-        user = User(
-            username="testuser",
-            email="test@example.com",
-            org_uuid=org.uuid
-        )
+        user = User(username="testuser", email="test@example.com", org_uuid=org.uuid)
         db_session.add(user)
         db_session.flush()
 
@@ -505,7 +480,7 @@ class TestCRUDOperations:
             owner_uuid=user.uuid,
             org_uuid=org.uuid,
             is_deleted=False,
-            deleted_at=None
+            deleted_at=None,
         )
         db_session.add(collection)
         db_session.flush()
@@ -516,22 +491,26 @@ class TestCRUDOperations:
 
         # Soft delete the collection
         from datetime import datetime, timezone
+
         collection.is_deleted = True
         collection.deleted_at = datetime.now(timezone.utc)
         db_session.flush()
 
         # Verify soft delete persisted
-        deleted_collection = db_session.query(Collection).filter_by(id=original_id).first()
+        deleted_collection = (
+            db_session.query(Collection).filter_by(id=original_id).first()
+        )
         assert deleted_collection.id == original_id
         assert deleted_collection.is_deleted is True
         assert deleted_collection.deleted_at is not None
         assert isinstance(deleted_collection.deleted_at, datetime)
 
         # Verify we can query to exclude soft-deleted items
-        active_collections = db_session.query(Collection).filter_by(
-            is_deleted=False,
-            owner_uuid=user.uuid
-        ).all()
+        active_collections = (
+            db_session.query(Collection)
+            .filter_by(is_deleted=False, owner_uuid=user.uuid)
+            .all()
+        )
         assert len(active_collections) == 0
 
     def test_update_visibility_profile(self, db_session):
@@ -541,11 +520,7 @@ class TestCRUDOperations:
         db_session.add(org)
         db_session.flush()
 
-        user = User(
-            username="testuser",
-            email="test@example.com",
-            org_uuid=org.uuid
-        )
+        user = User(username="testuser", email="test@example.com", org_uuid=org.uuid)
         db_session.add(user)
         db_session.flush()
 
@@ -558,7 +533,7 @@ class TestCRUDOperations:
             visible_entity_types=["Person"],
             enabled_entities=["Person"],
             auto_include_new=True,
-            is_active=True
+            is_active=True,
         )
         db_session.add(profile)
         db_session.flush()
@@ -572,9 +547,15 @@ class TestCRUDOperations:
         db_session.flush()
 
         # Verify updates persisted
-        updated_profile = db_session.query(VisibilityProfile).filter_by(id=original_id).first()
+        updated_profile = (
+            db_session.query(VisibilityProfile).filter_by(id=original_id).first()
+        )
         assert updated_profile.id == original_id
         assert updated_profile.name == "Updated Profile"
-        assert updated_profile.enabled_entities == ["Person", "Organization", "Location"]
+        assert updated_profile.enabled_entities == [
+            "Person",
+            "Organization",
+            "Location",
+        ]
         assert updated_profile.is_active is False
         assert updated_profile.owner_uuid == user.uuid  # Foreign key unchanged

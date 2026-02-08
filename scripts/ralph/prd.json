@@ -1,0 +1,135 @@
+{
+  "project": "LLM Token Usage Database Schema",
+  "branchName": "ralph/llm-usage-schema",
+  "description": "Add database tables to axai-pg for tracking LLM token usage per operation, linked to users and organizations. This enables rate limiting, quota enforcement, and usage analytics.",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Create LLMUsage model file",
+      "description": "As a developer, I need a new model file for usage-related tables so they follow axai-pg conventions.",
+      "background": "This is Phase 1 focused on database schema in axai-pg. The usage.py file will contain LLMUsage and LLMModelPricing tables for tracking token usage and model pricing.",
+      "implementation": "Create src/axai_pg/data/models/usage.py following existing model patterns. Reference document.py and graph.py for DualIdMixin usage, FK relationships, and constraints. Include proper imports and docstrings explaining table purpose.",
+      "acceptanceCriteria": [
+        "Create src/axai_pg/data/models/usage.py with proper imports",
+        "File follows existing model patterns (see document.py, graph.py for reference)",
+        "Includes docstrings explaining table purpose",
+        "Typecheck passes (uv run mypy src/axai_pg/data/models/usage.py)"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Implement LLMUsage table",
+      "description": "As a developer, I need an llm_usage table to store token usage per LLM operation.",
+      "background": "The llm_usage table stores per-operation token counts linked to documents, users, and organizations. It enables queries for rate limiting (tokens used by user in last hour) and quota enforcement (total tokens this month by org).",
+      "implementation": "LLMUsage class inherits from DualIdMixin and Base. Table name is llm_usage. FKs: document_uuid (CASCADE delete), user_uuid (SET NULL), org_uuid (SET NULL). Fields: operation_type, tool_name, model_name, model_provider. Token fields: input_tokens, output_tokens, total_tokens (Integer, non-negative with CHECK constraints). Optional: processing_time_seconds, estimated_cost_usd, job_id, metadata (JSONB). Timestamp: created_at with timezone. operation_type constrained to: 'summary', 'graph_extraction', 'text_cleaning', 'email_analysis', 'other'. Indexes on: document_uuid, user_uuid, org_uuid, created_at, operation_type, model_name. Composite indexes: (user_uuid, created_at), (org_uuid, created_at).",
+      "acceptanceCriteria": [
+        "LLMUsage class inherits from DualIdMixin and Base",
+        "Table name is llm_usage",
+        "Foreign keys: document_uuid (CASCADE delete), user_uuid (SET NULL), org_uuid (SET NULL)",
+        "Fields: operation_type, tool_name, model_name, model_provider",
+        "Token fields: input_tokens, output_tokens, total_tokens (all Integer, non-negative)",
+        "Optional fields: processing_time_seconds, estimated_cost_usd, job_id, metadata (JSONB)",
+        "Timestamp: created_at with timezone, server default",
+        "Check constraints for non-negative token values",
+        "Check constraint for valid operation_type values",
+        "Indexes on: document_uuid, user_uuid, org_uuid, created_at, operation_type, model_name",
+        "Composite indexes: (user_uuid, created_at), (org_uuid, created_at)",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Implement LLMModelPricing table",
+      "description": "As a developer, I need a llm_model_pricing table to store model pricing for cost calculations.",
+      "background": "The llm_model_pricing table stores model pricing configuration for cost estimation. It supports time-based pricing with effective_from/effective_until fields.",
+      "implementation": "LLMModelPricing class inherits from DualIdMixin and Base. Table name is llm_model_pricing. Fields: model_name (unique), model_provider, input_cost_per_1k, output_cost_per_1k. Validity period: effective_from, effective_until (nullable for current pricing). Timestamps: created_at, updated_at with timezone. Indexes on model_name and (effective_from, effective_until). See summary.py for optional Numeric fields.",
+      "acceptanceCriteria": [
+        "LLMModelPricing class inherits from DualIdMixin and Base",
+        "Table name is llm_model_pricing",
+        "Fields: model_name (unique), model_provider, input_cost_per_1k, output_cost_per_1k",
+        "Validity period: effective_from, effective_until (nullable for current pricing)",
+        "Timestamps: created_at, updated_at with timezone",
+        "Indexes on model_name and (effective_from, effective_until)",
+        "Typecheck passes"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Add relationships to existing models",
+      "description": "As a developer, I need relationships on Document, User, and Organization to navigate to usage records.",
+      "background": "Relationships enable navigation from existing models to usage records: document.llm_usage_records, user.llm_usage_records, org.llm_usage_records.",
+      "implementation": "Add llm_usage_records relationship to Document model with cascade='all, delete-orphan'. Add llm_usage_records relationship to User model with lazy='dynamic'. Add llm_usage_records relationship to Organization model with lazy='dynamic'. Add corresponding back_populates on LLMUsage relationships. Files to modify: document.py, user.py, organization.py.",
+      "acceptanceCriteria": [
+        "Add llm_usage_records relationship to Document model with cascade='all, delete-orphan'",
+        "Add llm_usage_records relationship to User model with lazy='dynamic'",
+        "Add llm_usage_records relationship to Organization model with lazy='dynamic'",
+        "Add corresponding back_populates on LLMUsage relationships",
+        "Typecheck passes"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Export new models",
+      "description": "As a developer, I need the new models exported from the models package.",
+      "background": "New models must be exported so they can be imported with: from axai_pg.data.models import LLMUsage, LLMModelPricing",
+      "implementation": "Add 'from .usage import LLMUsage, LLMModelPricing' to models/__init__.py. Add both classes to __all__ list.",
+      "acceptanceCriteria": [
+        "Add from .usage import LLMUsage, LLMModelPricing to models/__init__.py",
+        "Add both classes to __all__ list",
+        "Can import with from axai_pg.data.models import LLMUsage, LLMModelPricing",
+        "Typecheck passes"
+      ],
+      "priority": 5,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "Add unit tests for new models",
+      "description": "As a developer, I need tests to verify the new models work correctly.",
+      "background": "Tests verify model creation, constraints, cascade delete behavior, and relationship navigation. Success metric: Queries for 'tokens by user in last hour' should execute in <100ms on 1M rows.",
+      "implementation": "Create tests/test_usage_models.py. Test LLMUsage creation with valid data. Test LLMUsage constraints (non-negative tokens, valid operation_type). Test LLMModelPricing creation and uniqueness constraint. Test cascade delete: deleting document removes associated usage records. Test relationship navigation: document.llm_usage_records, user.llm_usage_records. Run with: uv run pytest tests/test_usage_models.py -v",
+      "acceptanceCriteria": [
+        "Create tests/test_usage_models.py",
+        "Test LLMUsage creation with valid data",
+        "Test LLMUsage constraints (non-negative tokens, valid operation_type)",
+        "Test LLMModelPricing creation and uniqueness constraint",
+        "Test cascade delete: deleting document removes associated usage records",
+        "Test relationship navigation: document.llm_usage_records, user.llm_usage_records",
+        "All tests pass (uv run pytest tests/test_usage_models.py -v)"
+      ],
+      "priority": 6,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "Seed default model pricing",
+      "description": "As a developer, I need default pricing data for common Azure OpenAI models.",
+      "background": "Seed script provides initial pricing data for cost estimation. Must be idempotent (can run multiple times safely).",
+      "implementation": "Create scripts/seed_model_pricing.py (or add to existing seed script). Include pricing for: gpt-4o, gpt-4o-mini, gpt-4, gpt-3.5-turbo. Pricing values must match current Azure OpenAI pricing. Script must be idempotent. Run with: uv run python scripts/seed_model_pricing.py",
+      "acceptanceCriteria": [
+        "Create scripts/seed_model_pricing.py or add to existing seed script",
+        "Include pricing for: gpt-4o, gpt-4o-mini, gpt-4, gpt-3.5-turbo",
+        "Script is idempotent (can run multiple times safely)",
+        "Pricing values match current Azure OpenAI pricing",
+        "Script can be run with uv run python scripts/seed_model_pricing.py"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}

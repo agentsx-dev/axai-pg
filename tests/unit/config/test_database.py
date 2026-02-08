@@ -4,24 +4,29 @@ Tests for database configuration and manager.
 NOTE: These tests require a real PostgreSQL database.
 Run with: pytest tests/unit/config/test_database.py -v --integration
 """
+
 import pytest
 import os
 import asyncio
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
-from axai_pg.data.config.database import DatabaseManager, PostgresConnectionConfig, PostgresPoolConfig
+from axai_pg.data.config.database import (
+    DatabaseManager,
+    PostgresConnectionConfig,
+    PostgresPoolConfig,
+)
 
 
 @pytest.fixture
 def test_conn_config():
     """Provide connection config matching test database."""
     return PostgresConnectionConfig(
-        host=os.getenv('POSTGRES_HOST', 'localhost'),
-        port=int(os.getenv('POSTGRES_PORT', '5432')),
-        database=os.getenv('POSTGRES_DB', 'test_db'),
-        username=os.getenv('POSTGRES_USER', 'test_user'),
-        password=os.getenv('POSTGRES_PASSWORD', 'test_password'),
-        schema='public'
+        host=os.getenv("POSTGRES_HOST", "localhost"),
+        port=int(os.getenv("POSTGRES_PORT", "5432")),
+        database=os.getenv("POSTGRES_DB", "test_db"),
+        username=os.getenv("POSTGRES_USER", "test_user"),
+        password=os.getenv("POSTGRES_PASSWORD", "test_password"),
+        schema="public",
     )
 
 
@@ -33,7 +38,7 @@ def test_pool_config():
         max_overflow=2,
         pool_timeout=10,
         pool_recycle=300,
-        pool_pre_ping=True
+        pool_pre_ping=True,
     )
 
 
@@ -63,7 +68,9 @@ def test_database_manager_session_scope(test_conn_config, test_pool_config):
         assert result == 1
 
 
-@pytest.mark.skip(reason="check_health has SQLAlchemy 2.0 compatibility issue - uses execute('SELECT 1') instead of execute(text('SELECT 1'))")
+@pytest.mark.skip(
+    reason="check_health has SQLAlchemy 2.0 compatibility issue - uses execute('SELECT 1') instead of execute(text('SELECT 1'))"
+)
 def test_database_manager_health_check(test_conn_config, test_pool_config):
     """Test health check functionality."""
     manager = DatabaseManager.get_instance()
@@ -82,7 +89,7 @@ def test_invalid_connection_handling():
         port=5432,
         database="invalid_db",
         username="invalid_user",
-        password="invalid_pass"
+        password="invalid_pass",
     )
 
     manager = DatabaseManager.get_instance()
@@ -100,7 +107,7 @@ def test_connection_pool_configuration(test_conn_config):
         max_overflow=3,
         pool_timeout=15,
         pool_recycle=600,
-        pool_pre_ping=True
+        pool_pre_ping=True,
     )
 
     manager = DatabaseManager.get_instance()

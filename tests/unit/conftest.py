@@ -8,6 +8,7 @@ To run these tests:
     docker-compose -f docker-compose.standalone-test.yml up -d postgres
     pytest tests/unit/ -v --integration
 """
+
 import pytest
 
 # Mark all tests in this directory as integration tests

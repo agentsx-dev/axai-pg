@@ -1,11 +1,13 @@
 from typing import Dict, Any
 from dataclasses import dataclass
-from .database import PostgresPoolConfig, PostgresConnectionConfig
+from .database import PostgresPoolConfig
+
 
 @dataclass
 class EnvironmentConfig:
     pool_config: PostgresPoolConfig
     extra_settings: Dict[str, Any]
+
 
 class Environments:
     @staticmethod
@@ -17,13 +19,13 @@ class Environments:
                 max_overflow=2,
                 pool_timeout=30,
                 pool_recycle=1800,
-                pool_pre_ping=True
+                pool_pre_ping=True,
             ),
             extra_settings={
                 "echo": True,  # SQL query logging
                 "echo_pool": True,  # Pool event logging
                 "timeout": 60,  # Command timeout
-            }
+            },
         )
 
     @staticmethod
@@ -35,13 +37,13 @@ class Environments:
                 max_overflow=1,
                 pool_timeout=10,
                 pool_recycle=300,
-                pool_pre_ping=True
+                pool_pre_ping=True,
             ),
             extra_settings={
                 "echo": False,
                 "echo_pool": False,
                 "timeout": 30,
-            }
+            },
         )
 
     @staticmethod
@@ -53,15 +55,15 @@ class Environments:
                 max_overflow=5,
                 pool_timeout=30,
                 pool_recycle=1800,
-                pool_pre_ping=True
+                pool_pre_ping=True,
             ),
             extra_settings={
                 "echo": False,
                 "echo_pool": False,
                 "timeout": 60,
-                "pool_reset_on_return": "commit",  # Reset transaction state on connection return
+                "pool_reset_on_return": "commit",  # Reset transaction state on return  # noqa: E501
                 "max_identifier_length": 63,  # PostgreSQL maximum identifier length
-            }
+            },
         )
 
     @classmethod
@@ -72,9 +74,9 @@ class Environments:
             "test": cls.get_test_config,
             "production": cls.get_production_config,
         }
-        
+
         config_getter = env_map.get(environment.lower())
         if not config_getter:
             raise ValueError(f"Unknown environment: {environment}")
-            
+
         return config_getter()
