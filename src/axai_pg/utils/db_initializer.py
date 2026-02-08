@@ -32,7 +32,7 @@ from ..data.config.database import (
     DatabaseManager,
     PostgresConnectionConfig,
     PostgresPoolConfig,
-    Base
+    Base,
 )
 from .schema_builder import PostgreSQLSchemaBuilder
 
@@ -148,7 +148,7 @@ class DatabaseInitializer:
                 return True
             except OperationalError as e:
                 if attempt < self.config.retry_attempts - 1:
-                    wait_time = min(2 ** attempt, 10)  # Exponential backoff, max 10s
+                    wait_time = min(2**attempt, 10)  # Exponential backoff, max 10s
                     logger.warning(
                         f"PostgreSQL not ready (attempt {attempt + 1}/{self.config.retry_attempts}). "
                         f"Waiting {wait_time}s... Error: {e}"
@@ -172,7 +172,7 @@ class DatabaseInitializer:
             with admin_engine.connect() as conn:
                 result = conn.execute(
                     text("SELECT 1 FROM pg_database WHERE datname = :dbname"),
-                    {"dbname": self.config.connection_config.database}
+                    {"dbname": self.config.connection_config.database},
                 )
                 exists = result.scalar() is not None
             admin_engine.dispose()
@@ -231,12 +231,15 @@ class DatabaseInitializer:
             # Terminate existing connections
             admin_engine = self._get_admin_engine()
             with admin_engine.connect() as conn:
-                conn.execute(text(
-                    "SELECT pg_terminate_backend(pg_stat_activity.pid) "
-                    "FROM pg_stat_activity "
-                    "WHERE pg_stat_activity.datname = :dbname "
-                    "AND pid <> pg_backend_pid()"
-                ), {"dbname": db_name})
+                conn.execute(
+                    text(
+                        "SELECT pg_terminate_backend(pg_stat_activity.pid) "
+                        "FROM pg_stat_activity "
+                        "WHERE pg_stat_activity.datname = :dbname "
+                        "AND pid <> pg_backend_pid()"
+                    ),
+                    {"dbname": db_name},
+                )
 
                 conn.execute(text(f'DROP DATABASE IF EXISTS "{db_name}"'))
             admin_engine.dispose()
@@ -246,7 +249,9 @@ class DatabaseInitializer:
             logger.error(f"Error dropping database: {e}")
             return False
 
-    def apply_schema(self, schema_file: Optional[str] = None, use_sqlalchemy: bool = True) -> bool:
+    def apply_schema(
+        self, schema_file: Optional[str] = None, use_sqlalchemy: bool = True
+    ) -> bool:
         """
         Apply database schema using SQLAlchemy models or SQL file.
 
@@ -291,7 +296,7 @@ class DatabaseInitializer:
             logger.info(f"Applying schema from SQL file {schema_path}...")
 
             try:
-                with open(schema_path, 'r') as f:
+                with open(schema_path, "r") as f:
                     schema_sql = f.read()
 
                 conn_config = self.config.connection_config
@@ -306,7 +311,9 @@ class DatabaseInitializer:
                     trans = conn.begin()
                     try:
                         # Split by semicolon and execute each statement
-                        statements = [s.strip() for s in schema_sql.split(';') if s.strip()]
+                        statements = [
+                            s.strip() for s in schema_sql.split(";") if s.strip()
+                        ]
                         for statement in statements:
                             if statement:
                                 conn.execute(text(statement))
@@ -343,20 +350,18 @@ class DatabaseInitializer:
         try:
             # Set environment variables for the script
             env = os.environ.copy()
-            env.update({
-                'POSTGRES_HOST': self.config.connection_config.host,
-                'POSTGRES_PORT': str(self.config.connection_config.port),
-                'POSTGRES_DB': self.config.connection_config.database,
-                'POSTGRES_USER': self.config.connection_config.username,
-                'POSTGRES_PASSWORD': self.config.connection_config.password,
-            })
+            env.update(
+                {
+                    "POSTGRES_HOST": self.config.connection_config.host,
+                    "POSTGRES_PORT": str(self.config.connection_config.port),
+                    "POSTGRES_DB": self.config.connection_config.database,
+                    "POSTGRES_USER": self.config.connection_config.username,
+                    "POSTGRES_PASSWORD": self.config.connection_config.password,
+                }
+            )
 
             result = subprocess.run(
-                ['python', script],
-                env=env,
-                capture_output=True,
-                text=True,
-                timeout=60
+                ["python", script], env=env, capture_output=True, text=True, timeout=60
             )
 
             if result.returncode == 0:
@@ -370,9 +375,7 @@ class DatabaseInitializer:
             return False
 
     def setup_database(
-        self,
-        load_sample_data: bool = False,
-        apply_schema: bool = True
+        self, load_sample_data: bool = False, apply_schema: bool = True
     ) -> bool:
         """
         Complete database setup: create database, apply schema, optionally load data.
@@ -404,8 +407,7 @@ class DatabaseInitializer:
         # Initialize DatabaseManager
         try:
             DatabaseManager.initialize(
-                self.config.connection_config,
-                self.config.pool_config
+                self.config.connection_config, self.config.pool_config
             )
             self._db_manager = DatabaseManager.get_instance()
             self._is_setup = True
@@ -478,9 +480,7 @@ class DatabaseInitializer:
             RuntimeError: If database is not set up
         """
         if not self._is_setup or not self._db_manager:
-            raise RuntimeError(
-                "Database not set up. Call setup_database() first."
-            )
+            raise RuntimeError("Database not set up. Call setup_database() first.")
         return self._db_manager
 
     @contextmanager

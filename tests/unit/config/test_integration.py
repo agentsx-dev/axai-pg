@@ -4,13 +4,18 @@ Tests for database integration and concurrent operations.
 NOTE: These tests require a real PostgreSQL database.
 Run with: pytest tests/unit/config/test_integration.py -v --integration
 """
+
 import pytest
 import threading
 import time
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from sqlalchemy import text
-from axai_pg.data.config.database import DatabaseManager, PostgresConnectionConfig, PostgresPoolConfig
+from axai_pg.data.config.database import (
+    DatabaseManager,
+    PostgresConnectionConfig,
+    PostgresPoolConfig,
+)
 from axai_pg.data.config.environments import Environments
 
 
@@ -25,6 +30,7 @@ def integration_db_manager():
 
 def test_concurrent_connections(integration_db_manager):
     """Test handling of multiple concurrent database connections."""
+
     def run_query(i):
         with integration_db_manager.session_scope() as session:
             # Simulate some work
@@ -43,11 +49,12 @@ def test_concurrent_connections(integration_db_manager):
 
 def test_connection_pool_scaling(integration_db_manager):
     """Test connection pool behavior under load."""
+
     def get_pool_stats():
         return {
             "size": integration_db_manager.engine.pool.size(),
             "overflow": integration_db_manager.engine.pool.overflow(),
-            "checkedout": integration_db_manager.engine.pool.checkedout()
+            "checkedout": integration_db_manager.engine.pool.checkedout(),
         }
 
     initial_stats = get_pool_stats()
@@ -101,7 +108,9 @@ def test_long_running_transaction(integration_db_manager):
         assert result == 2
 
 
-@pytest.mark.skip(reason="check_health has SQLAlchemy 2.0 compatibility issue - uses execute('SELECT 1') instead of execute(text('SELECT 1'))")
+@pytest.mark.skip(
+    reason="check_health has SQLAlchemy 2.0 compatibility issue - uses execute('SELECT 1') instead of execute(text('SELECT 1'))"
+)
 def test_health_check_metrics(integration_db_manager):
     """Test health check provides accurate metrics."""
     # Get health metrics using asyncio.run()
@@ -134,7 +143,9 @@ def test_transaction_isolation(integration_db_manager):
         # Test transaction rollback
         with pytest.raises(Exception):
             with integration_db_manager.session_scope() as session:
-                session.execute(text("INSERT INTO test_transactions (value) VALUES (1)"))
+                session.execute(
+                    text("INSERT INTO test_transactions (value) VALUES (1)")
+                )
                 raise Exception("Forced rollback")
 
         # Verify transaction was rolled back

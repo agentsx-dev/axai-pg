@@ -13,8 +13,8 @@ from .fixtures import (
 )
 
 __all__ = [
-    'axai_test_db',
-    'axai_db_session',
-    'axai_db_config',
-    'axai_db_manager',
+    "axai_test_db",
+    "axai_db_session",
+    "axai_db_config",
+    "axai_db_manager",
 ]

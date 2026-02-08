@@ -19,9 +19,9 @@ load_dotenv()
 # Test database configuration
 # Matches docker-compose.standalone-test.yml credentials
 TEST_DB_URL = os.getenv(
-    "TEST_DATABASE_URL",
-    "postgresql://test_user:test_password@localhost:5432/test_db"
+    "TEST_DATABASE_URL", "postgresql://test_user:test_password@localhost:5432/test_db"
 )
+
 
 def pytest_addoption(parser):
     """Add custom command line options."""
@@ -29,15 +29,16 @@ def pytest_addoption(parser):
         "--integration",
         action="store_true",
         default=False,
-        help="Run integration tests that require a real database"
+        help="Run integration tests that require a real database",
     )
+
 
 def pytest_configure(config):
     """Configure pytest."""
     config.addinivalue_line(
-        "markers",
-        "integration: mark test as requiring a real database"
+        "markers", "integration: mark test as requiring a real database"
     )
+
 
 @pytest.fixture(scope="session")
 def test_engine(request):
@@ -47,6 +48,7 @@ def test_engine(request):
         engine = create_engine(TEST_DB_URL)
         return engine
     return None
+
 
 @pytest.fixture(scope="session", autouse=True)
 def init_test_db(test_engine):
@@ -66,6 +68,7 @@ def init_test_db(test_engine):
     else:
         yield
 
+
 @pytest.fixture(scope="function")
 def db_session(test_engine):
     """Create a new database session for a test with transaction rollback."""
@@ -84,11 +87,13 @@ def db_session(test_engine):
         transaction.rollback()
     connection.close()
 
+
 # Alias for backward compatibility with tests that use real_db_session
 @pytest.fixture(scope="function")
 def real_db_session(db_session):
     """Alias for db_session for backward compatibility."""
     return db_session
+
 
 @pytest.fixture(scope="function")
 def test_data():
@@ -96,14 +101,14 @@ def test_data():
     return {
         "users": [
             {"username": "user1", "email": "user1@example.com"},
-            {"username": "user2", "email": "user2@example.com"}
+            {"username": "user2", "email": "user2@example.com"},
         ],
         "documents": [
             {"title": "Doc1", "content": "Content1", "org_id": 1},
-            {"title": "Doc2", "content": "Content2", "org_id": 1}
+            {"title": "Doc2", "content": "Content2", "org_id": 1},
         ],
         "topics": [
             {"name": "Topic1", "description": "Description1"},
-            {"name": "Topic2", "description": "Description2"}
-        ]
-    } 
+            {"name": "Topic2", "description": "Description2"},
+        ],
+    }

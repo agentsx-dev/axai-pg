@@ -24,11 +24,7 @@ class TestLLMUsageModel:
         db_session.add(org)
         db_session.flush()
 
-        user = User(
-            username="testuser",
-            email="test@example.com",
-            org_uuid=org.uuid
-        )
+        user = User(username="testuser", email="test@example.com", org_uuid=org.uuid)
         db_session.add(user)
         db_session.flush()
 
@@ -43,7 +39,7 @@ class TestLLMUsageModel:
             filename="test.txt",
             file_path="/test/path/test.txt",
             size=len(content),
-            content_type="text/plain"
+            content_type="text/plain",
         )
         db_session.add(document)
         db_session.flush()
@@ -68,7 +64,7 @@ class TestLLMUsageModel:
             processing_time_seconds=Decimal("2.5"),
             estimated_cost_usd=Decimal("0.015"),
             job_id="job-123",
-            usage_metadata={"source": "test"}
+            usage_metadata={"source": "test"},
         )
         db_session.add(usage)
         db_session.flush()
@@ -103,7 +99,7 @@ class TestLLMUsageModel:
             "graph_extraction",
             "text_cleaning",
             "email_analysis",
-            "other"
+            "other",
         ]
 
         for op_type in valid_operation_types:
@@ -115,7 +111,7 @@ class TestLLMUsageModel:
                 model_name="gpt-4o",
                 input_tokens=100,
                 output_tokens=50,
-                total_tokens=150
+                total_tokens=150,
             )
             db_session.add(usage)
             db_session.flush()
@@ -133,7 +129,7 @@ class TestLLMUsageModel:
             model_name="gpt-4o",
             input_tokens=100,
             output_tokens=50,
-            total_tokens=150
+            total_tokens=150,
         )
         db_session.add(usage)
 
@@ -151,7 +147,7 @@ class TestLLMUsageModel:
             model_name="gpt-4o",
             input_tokens=-1,
             output_tokens=50,
-            total_tokens=49
+            total_tokens=49,
         )
         db_session.add(usage)
 
@@ -169,7 +165,7 @@ class TestLLMUsageModel:
             model_name="gpt-4o",
             input_tokens=100,
             output_tokens=-1,
-            total_tokens=99
+            total_tokens=99,
         )
         db_session.add(usage)
 
@@ -187,7 +183,7 @@ class TestLLMUsageModel:
             model_name="gpt-4o",
             input_tokens=100,
             output_tokens=50,
-            total_tokens=-1
+            total_tokens=-1,
         )
         db_session.add(usage)
 
@@ -205,7 +201,7 @@ class TestLLMUsageModel:
             model_name="gpt-4o",
             input_tokens=0,
             output_tokens=0,
-            total_tokens=0
+            total_tokens=0,
         )
         db_session.add(usage)
         db_session.flush()
@@ -226,7 +222,7 @@ class TestLLMUsageModel:
             model_name="gpt-4o",
             input_tokens=100,
             output_tokens=50,
-            total_tokens=150
+            total_tokens=150,
         )
         db_session.add(usage)
         db_session.flush()
@@ -247,7 +243,7 @@ class TestLLMUsageModel:
             model_name="gpt-4o",
             input_tokens=100,
             output_tokens=50,
-            total_tokens=150
+            total_tokens=150,
         )
         db_session.add(usage)
         db_session.flush()
@@ -268,7 +264,7 @@ class TestLLMUsageModel:
             model_name="gpt-4o",
             input_tokens=100,
             output_tokens=50,
-            total_tokens=150
+            total_tokens=150,
         )
         db_session.add(usage)
         db_session.flush()
@@ -288,7 +284,7 @@ class TestLLMUsageModel:
             model_name="gpt-4o",
             input_tokens=100,
             output_tokens=50,
-            total_tokens=150
+            total_tokens=150,
         )
         usage2 = LLMUsage(
             document_uuid=document.uuid,
@@ -296,7 +292,7 @@ class TestLLMUsageModel:
             model_name="gpt-4o",
             input_tokens=200,
             output_tokens=100,
-            total_tokens=300
+            total_tokens=300,
         )
         db_session.add_all([usage1, usage2])
         db_session.flush()
@@ -319,7 +315,7 @@ class TestLLMUsageModel:
             model_name="gpt-4o",
             input_tokens=100,
             output_tokens=50,
-            total_tokens=150
+            total_tokens=150,
         )
         usage2 = LLMUsage(
             document_uuid=document.uuid,
@@ -328,7 +324,7 @@ class TestLLMUsageModel:
             model_name="gpt-3.5-turbo",
             input_tokens=50,
             output_tokens=25,
-            total_tokens=75
+            total_tokens=75,
         )
         db_session.add_all([usage1, usage2])
         db_session.flush()
@@ -351,7 +347,7 @@ class TestLLMUsageModel:
             model_name="gpt-4o",
             input_tokens=100,
             output_tokens=50,
-            total_tokens=150
+            total_tokens=150,
         )
         usage2 = LLMUsage(
             document_uuid=document.uuid,
@@ -359,13 +355,15 @@ class TestLLMUsageModel:
             model_name="gpt-4o",
             input_tokens=200,
             output_tokens=100,
-            total_tokens=300
+            total_tokens=300,
         )
         db_session.add_all([usage1, usage2])
         db_session.flush()
 
         # Verify usage records exist
-        usage_count = db_session.query(LLMUsage).filter_by(document_uuid=document_uuid).count()
+        usage_count = (
+            db_session.query(LLMUsage).filter_by(document_uuid=document_uuid).count()
+        )
         assert usage_count == 2
 
         # Delete the document
@@ -373,7 +371,9 @@ class TestLLMUsageModel:
         db_session.flush()
 
         # Verify usage records were cascade deleted
-        usage_count = db_session.query(LLMUsage).filter_by(document_uuid=document_uuid).count()
+        usage_count = (
+            db_session.query(LLMUsage).filter_by(document_uuid=document_uuid).count()
+        )
         assert usage_count == 0
 
     def test_user_delete_sets_null_on_usage(self, db_session):
@@ -385,11 +385,7 @@ class TestLLMUsageModel:
         org, doc_owner, document = self._create_test_document(db_session)
 
         # Create a second user who will be associated with the usage record
-        api_user = User(
-            username="api_user",
-            email="api@example.com",
-            org_uuid=org.uuid
-        )
+        api_user = User(username="api_user", email="api@example.com", org_uuid=org.uuid)
         db_session.add(api_user)
         db_session.flush()
         api_user_uuid = api_user.uuid
@@ -402,7 +398,7 @@ class TestLLMUsageModel:
             model_name="gpt-4o",
             input_tokens=100,
             output_tokens=50,
-            total_tokens=150
+            total_tokens=150,
         )
         db_session.add(usage)
         db_session.flush()
@@ -429,7 +425,7 @@ class TestLLMModelPricingModel:
             model_name="gpt-4o",
             model_provider="azure",
             input_cost_per_1k=Decimal("0.005"),
-            output_cost_per_1k=Decimal("0.015")
+            output_cost_per_1k=Decimal("0.015"),
         )
         db_session.add(pricing)
         db_session.flush()
@@ -454,7 +450,7 @@ class TestLLMModelPricingModel:
             model_name="gpt-4o",
             model_provider="azure",
             input_cost_per_1k=Decimal("0.005"),
-            output_cost_per_1k=Decimal("0.015")
+            output_cost_per_1k=Decimal("0.015"),
         )
         db_session.add(pricing1)
         db_session.flush()
@@ -464,7 +460,7 @@ class TestLLMModelPricingModel:
             model_name="gpt-4o",
             model_provider="openai",  # Different provider
             input_cost_per_1k=Decimal("0.006"),
-            output_cost_per_1k=Decimal("0.016")
+            output_cost_per_1k=Decimal("0.016"),
         )
         db_session.add(pricing2)
 
@@ -484,7 +480,7 @@ class TestLLMModelPricingModel:
             input_cost_per_1k=Decimal("0.03"),
             output_cost_per_1k=Decimal("0.06"),
             effective_from=start_date,
-            effective_until=end_date
+            effective_until=end_date,
         )
         db_session.add(pricing)
         db_session.flush()
@@ -499,7 +495,7 @@ class TestLLMModelPricingModel:
             ("gpt-4o", "azure", "0.005", "0.015"),
             ("gpt-4o-mini", "azure", "0.00015", "0.0006"),
             ("gpt-4", "azure", "0.03", "0.06"),
-            ("gpt-3.5-turbo", "azure", "0.0005", "0.0015")
+            ("gpt-3.5-turbo", "azure", "0.0005", "0.0015"),
         ]
 
         for model_name, provider, input_cost, output_cost in models:
@@ -507,7 +503,7 @@ class TestLLMModelPricingModel:
                 model_name=model_name,
                 model_provider=provider,
                 input_cost_per_1k=Decimal(input_cost),
-                output_cost_per_1k=Decimal(output_cost)
+                output_cost_per_1k=Decimal(output_cost),
             )
             db_session.add(pricing)
 
@@ -528,13 +524,17 @@ class TestLLMModelPricingModel:
             model_name="claude-3-sonnet",
             model_provider="anthropic",
             input_cost_per_1k=Decimal("0.003"),
-            output_cost_per_1k=Decimal("0.015")
+            output_cost_per_1k=Decimal("0.015"),
         )
         db_session.add(pricing)
         db_session.flush()
 
         # Query by model name
-        result = db_session.query(LLMModelPricing).filter_by(model_name="claude-3-sonnet").first()
+        result = (
+            db_session.query(LLMModelPricing)
+            .filter_by(model_name="claude-3-sonnet")
+            .first()
+        )
         assert result is not None
         assert result.model_provider == "anthropic"
         assert result.input_cost_per_1k == Decimal("0.003")

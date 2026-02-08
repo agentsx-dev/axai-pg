@@ -4,9 +4,11 @@ from dataclasses import dataclass
 from .database import PostgresConnectionConfig, PostgresPoolConfig
 from .environments import Environments, EnvironmentConfig
 
+
 @dataclass
 class AppSettings:
     """Application settings including database configuration."""
+
     environment: str
     conn_config: PostgresConnectionConfig
     env_config: EnvironmentConfig
@@ -15,11 +17,11 @@ class AppSettings:
     connection_timeout: int
 
     @classmethod
-    def load_from_env(cls) -> 'AppSettings':
+    def load_from_env(cls) -> "AppSettings":
         """Load and validate all application settings from environment variables."""
         # Determine environment
-        environment = os.getenv('APP_ENV', 'development').lower()
-        if environment not in ('development', 'test', 'production'):
+        environment = os.getenv("APP_ENV", "development").lower()
+        if environment not in ("development", "test", "production"):
             raise ValueError(f"Invalid environment: {environment}")
 
         # Load environment-specific configuration
@@ -27,19 +29,19 @@ class AppSettings:
 
         # Load database configuration
         conn_config = PostgresConnectionConfig(
-            host=cls._require_env('POSTGRES_HOST'),
-            port=int(os.getenv('POSTGRES_PORT', '5432')),
-            database=cls._require_env('POSTGRES_DB'),
-            username=cls._require_env('POSTGRES_USER'),
-            password=cls._require_env('POSTGRES_PASSWORD'),
-            schema=os.getenv('POSTGRES_SCHEMA', 'public'),
-            ssl_mode=os.getenv('POSTGRES_SSL_MODE', 'prefer')
+            host=cls._require_env("POSTGRES_HOST"),
+            port=int(os.getenv("POSTGRES_PORT", "5432")),
+            database=cls._require_env("POSTGRES_DB"),
+            username=cls._require_env("POSTGRES_USER"),
+            password=cls._require_env("POSTGRES_PASSWORD"),
+            schema=os.getenv("POSTGRES_SCHEMA", "public"),
+            ssl_mode=os.getenv("POSTGRES_SSL_MODE", "prefer"),
         )
 
         # Load additional settings
-        debug_mode = os.getenv('DEBUG', 'false').lower() == 'true'
-        log_sql = os.getenv('LOG_SQL', 'false').lower() == 'true'
-        connection_timeout = int(os.getenv('DB_CONNECTION_TIMEOUT', '30'))
+        debug_mode = os.getenv("DEBUG", "false").lower() == "true"
+        log_sql = os.getenv("LOG_SQL", "false").lower() == "true"
+        connection_timeout = int(os.getenv("DB_CONNECTION_TIMEOUT", "30"))
 
         return cls(
             environment=environment,
@@ -47,7 +49,7 @@ class AppSettings:
             env_config=env_config,
             debug_mode=debug_mode,
             log_sql=log_sql,
-            connection_timeout=connection_timeout
+            connection_timeout=connection_timeout,
         )
 
     @staticmethod
@@ -67,7 +69,7 @@ class AppSettings:
             raise ValueError("Database name is required")
         if not self.conn_config.username:
             raise ValueError("Database username is required")
-        
+
         # Validate pool configuration
         pool_config = self.env_config.pool_config
         if pool_config.pool_size < 1:
@@ -76,7 +78,7 @@ class AppSettings:
             raise ValueError("Max overflow must be non-negative")
         if pool_config.pool_timeout < 1:
             raise ValueError("Pool timeout must be positive")
-        
+
         # Validate timeouts
         if self.connection_timeout < 1:
             raise ValueError("Connection timeout must be positive")
@@ -92,13 +94,15 @@ class AppSettings:
             "echo": self.log_sql,
             "connect_args": {
                 "connect_timeout": self.connection_timeout,
-                "sslmode": self.conn_config.ssl_mode
+                "sslmode": self.conn_config.ssl_mode,
             },
-            **self.env_config.extra_settings
+            **self.env_config.extra_settings,
         }
+
 
 class Settings:
     """Singleton settings manager."""
+
     _instance: Optional[AppSettings] = None
 
     @classmethod

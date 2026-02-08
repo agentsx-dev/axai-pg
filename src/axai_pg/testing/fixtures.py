@@ -37,18 +37,18 @@ def axai_db_config() -> PostgresConnectionConfig:
         PostgresConnectionConfig instance
     """
     return PostgresConnectionConfig(
-        host=os.getenv('POSTGRES_HOST', 'localhost'),
-        port=int(os.getenv('POSTGRES_PORT', '5432')),
-        database=os.getenv('POSTGRES_DB', 'test_db'),
-        username=os.getenv('POSTGRES_USER', 'test_user'),
-        password=os.getenv('POSTGRES_PASSWORD', 'test_password'),
-        schema=os.getenv('POSTGRES_SCHEMA', 'public')
+        host=os.getenv("POSTGRES_HOST", "localhost"),
+        port=int(os.getenv("POSTGRES_PORT", "5432")),
+        database=os.getenv("POSTGRES_DB", "test_db"),
+        username=os.getenv("POSTGRES_USER", "test_user"),
+        password=os.getenv("POSTGRES_PASSWORD", "test_password"),
+        schema=os.getenv("POSTGRES_SCHEMA", "public"),
     )
 
 
 @pytest.fixture(scope="session")
 def axai_test_db(
-    axai_db_config: PostgresConnectionConfig
+    axai_db_config: PostgresConnectionConfig,
 ) -> Generator[DatabaseInitializer, None, None]:
     """
     Session-scoped fixture that sets up and tears down the test database.
@@ -68,20 +68,20 @@ def axai_test_db(
     Yields:
         DatabaseInitializer instance
     """
-    auto_drop = os.getenv('AXAI_AUTO_DROP_DB', 'false').lower() == 'true'
+    auto_drop = os.getenv("AXAI_AUTO_DROP_DB", "false").lower() == "true"
 
     config = DatabaseInitializerConfig(
         connection_config=axai_db_config,
         auto_create_db=True,
         auto_drop_on_exit=auto_drop,
         wait_timeout=30,
-        retry_attempts=5
+        retry_attempts=5,
     )
 
     db_init = DatabaseInitializer(config)
 
     # Setup database
-    load_sample = os.getenv('AXAI_LOAD_SAMPLE_DATA', 'false').lower() == 'true'
+    load_sample = os.getenv("AXAI_LOAD_SAMPLE_DATA", "false").lower() == "true"
     success = db_init.setup_database(load_sample_data=load_sample)
 
     if not success:
@@ -115,6 +115,7 @@ def axai_db_session(axai_test_db: DatabaseInitializer) -> Generator:
 
     # Create a session bound to this connection
     from sqlalchemy.orm import sessionmaker
+
     Session = sessionmaker(bind=connection)
     session = Session()
 
@@ -144,6 +145,7 @@ def axai_db_manager(axai_test_db: DatabaseInitializer) -> DatabaseManager:
 
 
 # Additional utility fixtures for common testing scenarios
+
 
 @pytest.fixture(scope="function")
 def axai_clean_db_session(axai_test_db: DatabaseInitializer) -> Generator:
@@ -177,19 +179,18 @@ def axai_reset_db(axai_test_db: DatabaseInitializer):
     Args:
         axai_test_db: Session-scoped database initializer
     """
-    load_sample = os.getenv('AXAI_LOAD_SAMPLE_DATA', 'false').lower() == 'true'
+    load_sample = os.getenv("AXAI_LOAD_SAMPLE_DATA", "false").lower() == "true"
     axai_test_db.reset_database(load_sample_data=load_sample)
 
 
 # Markers for test categorization
 
+
 def pytest_configure(config):
     """Configure custom pytest markers."""
     config.addinivalue_line(
-        "markers",
-        "axai_integration: mark test as requiring axai_pg database"
+        "markers", "axai_integration: mark test as requiring axai_pg database"
     )
     config.addinivalue_line(
-        "markers",
-        "axai_slow: mark test as slow (uses database resets)"
+        "markers", "axai_slow: mark test as slow (uses database resets)"
     )

@@ -8,6 +8,7 @@ Note: These tests verify basic database operations without the security middlewa
 active to avoid "No authenticated user context" errors. The security middleware
 requires a proper authentication context to be set up.
 """
+
 import pytest
 from sqlalchemy.orm import Session
 from axai_pg.data.models import User, Document, Organization
@@ -26,9 +27,9 @@ def test_org(db_session):
 def test_user(db_session, test_org):
     """Creates a test user with standard permissions."""
     user = User(
-        username='test_middleware_user',
-        email='test_middleware@example.com',
-        org_uuid=test_org.uuid
+        username="test_middleware_user",
+        email="test_middleware@example.com",
+        org_uuid=test_org.uuid,
     )
     db_session.add(user)
     db_session.flush()
@@ -39,16 +40,16 @@ def test_user(db_session, test_org):
 def test_document(db_session, test_user, test_org):
     """Creates a test document for permission testing."""
     doc = Document(
-        title='Test Middleware Document',
-        content='Test Content',
+        title="Test Middleware Document",
+        content="Test Content",
         owner_uuid=test_user.uuid,
         org_uuid=test_org.uuid,
-        document_type='text',
-        status='draft',
-        filename='test.txt',
-        file_path='/test/test.txt',
+        document_type="text",
+        status="draft",
+        filename="test.txt",
+        file_path="/test/test.txt",
         size=100,
-        content_type='text/plain'
+        content_type="text/plain",
     )
     db_session.add(doc)
     db_session.flush()
@@ -68,16 +69,16 @@ def test_create_document_with_middleware(db_session, test_user, test_org):
     """Test document creation with security middleware context."""
     # Create a new document
     new_doc = Document(
-        title='New Test Document',
-        content='New Content',
+        title="New Test Document",
+        content="New Content",
         owner_uuid=test_user.uuid,
         org_uuid=test_org.uuid,
-        document_type='text',
-        status='draft',
-        filename='new_test.txt',
-        file_path='/test/new_test.txt',
+        document_type="text",
+        status="draft",
+        filename="new_test.txt",
+        file_path="/test/new_test.txt",
         size=50,
-        content_type='text/plain'
+        content_type="text/plain",
     )
     db_session.add(new_doc)
     db_session.flush()
@@ -90,12 +91,12 @@ def test_create_document_with_middleware(db_session, test_user, test_org):
 def test_update_document(db_session, test_document):
     """Test document update."""
     original_title = test_document.title
-    test_document.title = 'Updated Title'
+    test_document.title = "Updated Title"
     db_session.flush()
 
     # Verify update persisted
     updated = db_session.query(Document).filter_by(uuid=test_document.uuid).first()
-    assert updated.title == 'Updated Title'
+    assert updated.title == "Updated Title"
     assert updated.title != original_title
 
 

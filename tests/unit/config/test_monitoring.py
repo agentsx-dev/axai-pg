@@ -4,6 +4,7 @@ Tests for monitoring and metrics collection.
 NOTE: These tests require a real PostgreSQL database.
 Run with: pytest tests/unit/config/test_monitoring.py -v --integration
 """
+
 import pytest
 from datetime import datetime, timedelta, UTC
 import time
@@ -16,17 +17,18 @@ from axai_pg.data.monitoring import (
     AlertManager,
     AlertSeverity,
 )
-from axai_pg.data.config.database import DatabaseManager, PostgresConnectionConfig, PostgresPoolConfig
+from axai_pg.data.config.database import (
+    DatabaseManager,
+    PostgresConnectionConfig,
+    PostgresPoolConfig,
+)
 
 
 @pytest.fixture
 def setup_monitoring_db():
     """Setup test database connection."""
     config = PostgresConnectionConfig.from_env()
-    pool_config = PostgresPoolConfig(
-        pool_size=2,
-        max_overflow=1
-    )
+    pool_config = PostgresPoolConfig(pool_size=2, max_overflow=1)
     DatabaseManager.initialize(config, pool_config)
     return DatabaseManager.get_instance()
 
@@ -73,7 +75,7 @@ def test_alert_triggering(alert_manager):
         "size": 5,
         "checkedout": 4,  # 80% utilization should trigger warning
         "checkedin": 1,
-        "overflow": 0
+        "overflow": 0,
     }
     alert_manager.check_pool_utilization(pool_status)
 
@@ -81,7 +83,7 @@ def test_alert_triggering(alert_manager):
     mock_handler.assert_called_with(
         "High pool utilization detected",
         AlertSeverity.WARNING,
-        {"utilization": 0.8, **pool_status}
+        {"utilization": 0.8, **pool_status},
     )
 
 
@@ -97,10 +99,7 @@ def test_log_retention(metrics_collector):
     """Test log retention and cleanup."""
     # Add old metrics
     old_date = (datetime.now(UTC) - timedelta(days=8)).isoformat()
-    metrics_collector._metrics["queries"][old_date] = {
-        "duration": 0.1,
-        "slow": False
-    }
+    metrics_collector._metrics["queries"][old_date] = {"duration": 0.1, "slow": False}
 
     # Cleanup old metrics
     metrics_collector.cleanup_old_metrics()
@@ -135,5 +134,5 @@ def test_monitoring_integration(setup_monitoring_db, metrics_collector):
     assert "pool" in metrics["metrics"]
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pytest.main([__file__])
