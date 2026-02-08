@@ -1,0 +1,99 @@
+# Ralph Progress Log
+Started: Thu Feb  5 08:33:42 CST 2026
+
+## Codebase Patterns
+- Models use DualIdMixin and Base from ..config.database
+- Import pattern: `from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, CheckConstraint, Index, Numeric`
+- Import pattern: `from sqlalchemy.dialects.postgresql import UUID, JSONB`
+- Import pattern: `from sqlalchemy.sql import func`
+- Import pattern: `from sqlalchemy.orm import relationship`
+- Timestamps use `server_default=func.now()` and `onupdate=func.now()`
+- All tables have a `__repr__` method
+- Docstrings should explain table purpose and dual ID pattern
+- JSONB metadata columns must use alternate attribute name to avoid SQLAlchemy conflict: `usage_metadata = Column(JSONB, name='metadata')`
+- Tests: Import new models from `axai_pg.data.models`, not top-level `axai_pg`
+- Tests: Relationships with `lazy='dynamic'` return AppenderQuery; use `list()` to iterate/get length
+- Document.owner_uuid has `ondelete='CASCADE'` and `nullable=False` - deleting a user deletes their documents
+
+---
+
+## 2026-02-05 - US-001
+- Created src/axai_pg/data/models/usage.py with LLMUsage and LLMModelPricing class stubs
+- File follows existing model patterns with proper imports
+- Added docstrings explaining table purposes
+- Files changed: src/axai_pg/data/models/usage.py (new)
+- **Learnings for future iterations:**
+  - Reference document.py and graph.py for FK relationship patterns
+  - Reference summary.py for Numeric field patterns
+  - The Base class is imported from ..config.database, not .base
+  - DualIdMixin is imported from .base
+---
+
+## 2026-02-05 - US-002
+- Implemented full LLMUsage table with all required fields
+- Added foreign keys: document_uuid (CASCADE), user_uuid (SET NULL), org_uuid (SET NULL)
+- Added operation fields: operation_type, tool_name, model_name, model_provider
+- Added token fields: input_tokens, output_tokens, total_tokens with non-negative check constraints
+- Added optional fields: processing_time_seconds, estimated_cost_usd, job_id, usage_metadata (JSONB)
+- Added check constraint for valid operation_type values
+- Added indexes on all FK columns and created composite indexes for rate limiting queries
+- Added relationship definitions to Document, User, Organization (back_populates="llm_usage_records")
+- Files changed: src/axai_pg/data/models/usage.py
+- **Learnings for future iterations:**
+  - JSONB metadata column must be renamed to avoid conflict with SQLAlchemy Base.metadata (use `usage_metadata = Column(JSONB, name='metadata')`)
+  - See document.py for same pattern: `document_metadata = Column(JSONB, name='metadata')`
+  - Relationships are added to LLMUsage now; US-004 will add back_populates to Document/User/Organization models
+---
+
+## 2026-02-05 - US-003
+- Implemented LLMModelPricing table with all required fields
+- Added model_name (unique, not null) and model_provider fields
+- Added pricing fields: input_cost_per_1k, output_cost_per_1k (Numeric(10, 6))
+- Added validity period: effective_from (not null), effective_until (nullable for current pricing)
+- Added timestamps: created_at, updated_at with timezone
+- Added indexes: model_name index and composite (effective_from, effective_until) index
+- Files changed: src/axai_pg/data/models/usage.py
+- **Learnings for future iterations:**
+  - Numeric(10, 6) is a good precision for cost values (allows 4 decimal places for dollars)
+  - Use unique=True on Column for simple unique constraints vs adding to __table_args__
+  - effective_until is nullable to represent "current pricing" (no end date)
+---
+
+## 2026-02-05 - US-004
+- Added llm_usage_records relationship to Document model with cascade='all, delete-orphan'
+- Added llm_usage_records relationship to User model with lazy='dynamic'
+- Added llm_usage_records relationship to Organization model with lazy='dynamic'
+- Files changed: document.py, user.py, organization.py
+- **Learnings for future iterations:**
+  - LLMUsage already had back_populates="llm_usage_records" defined in US-002
+  - Document relationship uses cascade='all, delete-orphan' to delete usage records when document is deleted
+  - User and Organization relationships do NOT cascade delete (they use SET NULL on FK)
+  - lazy='dynamic' is appropriate for relationships that may have many records
+---
+
+## 2026-02-05 - US-005
+- Exported LLMUsage and LLMModelPricing from models/__init__.py
+- Added import statement: `from .usage import LLMUsage, LLMModelPricing`
+- Added both classes to __all__ list
+- Verified import works: `from axai_pg.data.models import LLMUsage, LLMModelPricing`
+- Files changed: src/axai_pg/data/models/__init__.py
+- **Learnings for future iterations:**
+  - New models should always be exported from models/__init__.py
+  - Add both the import line and add to __all__ list
+  - Test imports with uv run python -c to verify export works
+---
+
+## 2026-02-05 - US-006
+- Created tests/test_usage_models.py with 19 integration tests
+- Tests cover LLMUsage creation, all valid operation types, constraint violations
+- Tests cover LLMModelPricing creation, uniqueness constraint, validity periods
+- Tests cover cascade delete (document deletion removes usage records)
+- Tests cover SET NULL on user delete (usage records keep user_uuid as NULL)
+- Tests cover relationship navigation: document.llm_usage_records, user.llm_usage_records
+- Files changed: tests/test_usage_models.py (new)
+- **Learnings for future iterations:**
+  - Import LLMUsage/LLMModelPricing from axai_pg.data.models, not top-level axai_pg
+  - Document relationships with lazy='dynamic' return AppenderQuery, need list() to get length
+  - When testing user delete + SET NULL, use a separate user (not document owner) since document.owner_uuid has CASCADE delete
+  - The Document model has owner_uuid as NOT NULL with ondelete='CASCADE', so deleting document owner deletes the document too
+---

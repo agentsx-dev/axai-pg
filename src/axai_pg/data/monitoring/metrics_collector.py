@@ -1,5 +1,5 @@
 from typing import Dict, Any, Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 import json
 import os
 from pathlib import Path
@@ -86,7 +86,7 @@ class MetricsCollector:
         
         logging.getLogger('query_logger').info(
             json.dumps({
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
                 "duration": duration,
                 "query": query,
                 "context": context
@@ -94,7 +94,7 @@ class MetricsCollector:
         )
         
         # Update query metrics
-        self._metrics["queries"][datetime.utcnow().isoformat()] = {
+        self._metrics["queries"][datetime.now(UTC).isoformat()] = {
             "duration": duration,
             "slow": duration > 1.0
         }
@@ -103,7 +103,7 @@ class MetricsCollector:
         """Log error with context."""
         logging.getLogger('error_logger').error(
             json.dumps({
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
                 "error": str(error),
                 "type": type(error).__name__,
                 "context": context
@@ -119,7 +119,7 @@ class MetricsCollector:
     def update_pool_metrics(self, pool_status: Dict[str, Any]):
         """Update connection pool metrics."""
         self._metrics["pool"] = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             **pool_status
         }
         
@@ -133,7 +133,7 @@ class MetricsCollector:
         """Log audit trail information."""
         logging.getLogger('audit_logger').info(
             json.dumps({
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
                 "action": action,
                 "user_id": user_id,
                 "details": details
@@ -143,13 +143,13 @@ class MetricsCollector:
     def get_metrics(self) -> Dict[str, Any]:
         """Get current metrics snapshot."""
         return {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "metrics": self._metrics
         }
     
     def cleanup_old_metrics(self):
         """Clean up metrics older than retention period."""
-        cutoff = datetime.utcnow() - timedelta(days=self.MAX_LOG_DAYS)
+        cutoff = datetime.now(UTC) - timedelta(days=self.MAX_LOG_DAYS)
         
         # Cleanup query metrics
         self._metrics["queries"] = {

@@ -5,7 +5,7 @@ NOTE: These tests require a real PostgreSQL database.
 Run with: pytest tests/unit/config/test_monitoring.py -v --integration
 """
 import pytest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 import time
 import asyncio
 from unittest.mock import MagicMock
@@ -96,7 +96,7 @@ def test_query_monitoring(metrics_collector):
 def test_log_retention(metrics_collector):
     """Test log retention and cleanup."""
     # Add old metrics
-    old_date = (datetime.utcnow() - timedelta(days=8)).isoformat()
+    old_date = (datetime.now(UTC) - timedelta(days=8)).isoformat()
     metrics_collector._metrics["queries"][old_date] = {
         "duration": 0.1,
         "slow": False

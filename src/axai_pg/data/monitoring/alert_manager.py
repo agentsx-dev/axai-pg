@@ -1,5 +1,5 @@
 from typing import Dict, Any, Optional, List, Callable
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 import logging
 from dataclasses import dataclass
 from enum import Enum
@@ -56,7 +56,7 @@ class AlertManager:
     
     def _should_alert(self, alert_type: str) -> bool:
         """Check if we should send an alert based on cooldown period."""
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         if alert_type in self._last_alerts:
             threshold = self._thresholds.get(alert_type)
             if threshold and now - self._last_alerts[alert_type] < threshold.cooldown_period:
@@ -66,7 +66,7 @@ class AlertManager:
     def _trigger_alert(self, alert_type: str, message: str, severity: AlertSeverity, context: Dict[str, Any]):
         """Trigger alert across all handlers if cooldown period has passed."""
         if self._should_alert(alert_type):
-            self._last_alerts[alert_type] = datetime.utcnow()
+            self._last_alerts[alert_type] = datetime.now(UTC)
             for handler in self._alert_handlers:
                 try:
                     handler(message, severity, context)
