@@ -1,7 +1,7 @@
 from typing import List, Optional, Dict, Any
 from datetime import timedelta
 from uuid import UUID
-from sqlalchemy import desc, or_
+from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload
 from .base_repository import BaseRepository
 from .cache_manager import cache_query
@@ -84,12 +84,12 @@ class DocumentRepository(BaseRepository[Document]):
                     -- Base case: direct relationships
                     SELECT DISTINCT d.uuid, d.title, 1 as depth
                     FROM documents d
-                    JOIN graph_relationships gr ON gr.source_entity_uuid = :doc_uuid 
+                    JOIN graph_relationships gr ON gr.source_entity_uuid = :doc_uuid
                         AND gr.target_entity_uuid = d.uuid
                     WHERE d.uuid != :doc_uuid
-                    
+
                     UNION
-                    
+
                     -- Recursive case: traverse relationships
                     SELECT DISTINCT d.uuid, d.title, rd.depth + 1
                     FROM related_docs rd

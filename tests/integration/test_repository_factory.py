@@ -2,14 +2,10 @@
 
 import pytest
 import threading
-import time
 from datetime import datetime, timedelta
 from typing import List
 from axai_pg.data.repositories.enhanced_factory import RepositoryFactory
-from axai_pg.data.repositories.metrics_config import (
-    RepositoryMetricsConfig,
-    MetricsProfile,
-)
+from axai_pg.data.repositories.metrics_config import RepositoryMetricsConfig
 from axai_pg.data.models.document import Document
 from axai_pg.data.repositories.document_repository import DocumentRepository
 
@@ -42,7 +38,7 @@ def test_thread_safety():
 
     def worker():
         # Get repository and record some operations
-        repo = factory.get_repository(Document)
+        factory.get_repository(Document)
         metrics = factory._metrics["document"]
         for _ in range(100):
             metrics.record_operation(duration_ms=10.0)
@@ -70,7 +66,7 @@ def test_metrics_configuration():
     factory.configure_metrics(Document, config)
 
     # Perform some operations
-    repo = factory.get_repository(Document)
+    factory.get_repository(Document)
     metrics = factory._metrics["document"]
 
     # Fast operation

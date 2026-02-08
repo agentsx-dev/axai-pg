@@ -1,7 +1,6 @@
-from typing import Optional, Any, Dict
+from typing import Optional, Any
 from sqlalchemy import event
 from sqlalchemy.orm import Session, Query
-from sqlalchemy.engine import Connection
 from .security_manager import SecurityManager
 from .security_config import SecurityConfig, SecurityConfigFactory
 import logging

@@ -13,9 +13,8 @@ provide complete schema initialization.
 """
 
 import logging
-from sqlalchemy import event, DDL, text
+from sqlalchemy import event, text
 from sqlalchemy.engine import Engine
-from sqlalchemy.schema import CreateTable
 
 # Import models to register them with Base.metadata and set up event listeners
 from ..data.models import Base

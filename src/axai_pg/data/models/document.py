@@ -12,7 +12,6 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID, JSONB, JSON
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship, backref
-import uuid
 from ..config.database import Base
 from .base import DualIdMixin
 

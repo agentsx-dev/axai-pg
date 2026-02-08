@@ -1,4 +1,4 @@
-from typing import Optional, Dict, List, Any, Type
+from typing import Optional, Dict, List
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import select
 from ..config.database import DatabaseManager
@@ -119,7 +119,7 @@ class SecurityManager:
             # Count recent actions within window
             count = session.execute(
                 """
-                SELECT COUNT(*) FROM access_log 
+                SELECT COUNT(*) FROM access_log
                 WHERE username = (SELECT username FROM users WHERE id = :user_id)
                 AND action_type = :action
                 AND action_time > NOW() - INTERVAL ':window seconds'

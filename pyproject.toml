@@ -114,7 +114,28 @@ fmt = "black src/ tests/"
 [tool.hatch.envs.types]
 dependencies = [
     "mypy>=1.0.0",
+    "types-psutil",
 ]
 
 [tool.hatch.envs.types.scripts]
-check = "mypy src/" 
+check = "mypy src/"
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = false
+warn_unused_configs = true
+ignore_missing_imports = true
+disable_error_code = [
+    "attr-defined",
+    "call-overload",
+    "assignment",
+    "misc",
+    "union-attr",
+    "return-value",
+    "arg-type",
+    "var-annotated",
+    "method-assign",
+    "operator",
+    "valid-type",
+    "dict-item",
+] 

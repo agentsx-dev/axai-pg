@@ -6,10 +6,7 @@ Run with: pytest tests/unit/repositories/test_document_repository.py -v --integr
 """
 
 import pytest
-from datetime import datetime
-from uuid import uuid4
 from axai_pg.data.models import Document, Organization, User
-from axai_pg.data.models.topic import Topic, DocumentTopic
 from axai_pg.data.models.summary import Summary
 
 

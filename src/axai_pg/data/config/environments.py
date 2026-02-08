@@ -1,6 +1,6 @@
 from typing import Dict, Any
 from dataclasses import dataclass
-from .database import PostgresPoolConfig, PostgresConnectionConfig
+from .database import PostgresPoolConfig
 
 
 @dataclass
@@ -61,7 +61,7 @@ class Environments:
                 "echo": False,
                 "echo_pool": False,
                 "timeout": 60,
-                "pool_reset_on_return": "commit",  # Reset transaction state on connection return
+                "pool_reset_on_return": "commit",  # Reset transaction state on return  # noqa: E501
                 "max_identifier_length": 63,  # PostgreSQL maximum identifier length
             },
         )

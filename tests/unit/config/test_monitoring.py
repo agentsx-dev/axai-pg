@@ -7,8 +7,6 @@ Run with: pytest tests/unit/config/test_monitoring.py -v --integration
 
 import pytest
 from datetime import datetime, timedelta, UTC
-import time
-import asyncio
 from unittest.mock import MagicMock
 from sqlalchemy import text
 

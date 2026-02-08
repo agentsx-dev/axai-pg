@@ -2,7 +2,6 @@ from sqlalchemy import Column, Text, DateTime, ForeignKey, CheckConstraint, Inde
 from sqlalchemy.dialects.postgresql import UUID, JSON
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
-import uuid
 from ..config.database import Base
 from .base import DualIdMixin
 

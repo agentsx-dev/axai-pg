@@ -6,11 +6,10 @@ and manages PostgreSQL-specific schema features (extensions, triggers, indexes, 
 """
 
 import pytest
-from sqlalchemy import create_engine, text, inspect
+from sqlalchemy import text, inspect
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.axai_pg.utils.schema_builder import PostgreSQLSchemaBuilder
-from src.axai_pg.data.config.database import Base
 
 
 @pytest.mark.integration

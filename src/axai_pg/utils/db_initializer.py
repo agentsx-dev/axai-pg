@@ -20,19 +20,18 @@ import logging
 import subprocess
 import time
 from pathlib import Path
-from typing import Optional, Dict, Any, List
+from typing import Optional
 from contextlib import contextmanager
 from dataclasses import dataclass
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
-from sqlalchemy.exc import SQLAlchemyError, OperationalError
+from sqlalchemy.exc import OperationalError
 
 from ..data.config.database import (
     DatabaseManager,
     PostgresConnectionConfig,
     PostgresPoolConfig,
-    Base,
 )
 from .schema_builder import PostgreSQLSchemaBuilder
 

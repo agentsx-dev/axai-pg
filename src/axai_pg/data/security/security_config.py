@@ -1,6 +1,5 @@
-from typing import Dict, Any
 from dataclasses import dataclass
-from datetime import timedelta
+from typing import Dict
 
 
 @dataclass

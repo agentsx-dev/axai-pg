@@ -1,8 +1,6 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, CheckConstraint, Index
+from sqlalchemy import Column, Text, DateTime, CheckConstraint, Index
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.postgresql import UUID
-import uuid
 from ..config.database import Base
 from .base import DualIdMixin
 

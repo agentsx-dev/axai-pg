@@ -1,4 +1,3 @@
-from typing import List
 from sqlalchemy.orm import Session
 from ..config.database import DatabaseManager
 from ..models.security import UserRole, RolePermission

@@ -1,5 +1,5 @@
 from sqlalchemy.orm import DeclarativeBase, declared_attr
-from sqlalchemy import Column, Integer, DateTime, String, event
+from sqlalchemy import Column, Integer, DateTime, String
 from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime
 import uuid as uuid_lib

@@ -1,4 +1,4 @@
-from typing import Dict, Type, TypeVar, Optional, Any
+from typing import Dict, Type, TypeVar, Optional
 from datetime import datetime
 from .base_repository import BaseRepository
 from .document_repository import DocumentRepository

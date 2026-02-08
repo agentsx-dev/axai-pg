@@ -1,12 +1,11 @@
 from typing import Dict, Optional, Callable
 from dataclasses import dataclass
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 from sqlalchemy.engine import Engine
 from contextlib import contextmanager
 import os
 import time
-import logging
 
 
 class Base(DeclarativeBase):
@@ -87,7 +86,10 @@ class DatabaseManager:
             pool_config = PostgresPoolConfig()
 
         # Construct connection URL
-        url = f"postgresql://{conn_config.username}:{conn_config.password}@{conn_config.host}:{conn_config.port}/{conn_config.database}"
+        url = (
+            f"postgresql://{conn_config.username}:{conn_config.password}"
+            f"@{conn_config.host}:{conn_config.port}/{conn_config.database}"
+        )
 
         # Configure engine with retry mechanism
         instance._engine = create_engine(
@@ -124,7 +126,7 @@ class DatabaseManager:
         try:
             yield session
             session.commit()
-        except Exception as e:
+        except Exception:
             session.rollback()
             # Monitor will catch and log the error
             raise

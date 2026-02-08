@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import threading
 import psutil
 import gc
-from .metrics_config import RepositoryMetricsConfig, MetricsProfile
+from .metrics_config import RepositoryMetricsConfig
 
 
 class RepositoryMetrics:

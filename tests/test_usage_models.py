@@ -388,7 +388,6 @@ class TestLLMUsageModel:
         api_user = User(username="api_user", email="api@example.com", org_uuid=org.uuid)
         db_session.add(api_user)
         db_session.flush()
-        api_user_uuid = api_user.uuid
 
         # Create usage record with the api_user (not the document owner)
         usage = LLMUsage(

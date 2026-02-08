@@ -11,13 +11,8 @@ from src.axai_pg.data.models import (
     Organization,
     User,
     Document,
-    DocumentVersion,
-    Summary,
-    Topic,
-    DocumentTopic,
 )
-from src.axai_pg.data.models.graph import GraphEntity, GraphRelationship
-from src.axai_pg.data.models.collection import Collection, VisibilityProfile
+from src.axai_pg.data.models.collection import VisibilityProfile
 
 
 @pytest.mark.integration
@@ -127,7 +122,6 @@ class TestSchemaCreation:
             session.add(org)
             session.commit()
 
-            org_id = org.id
             original_updated_at = org.updated_at
 
             # Wait to ensure timestamp difference
@@ -506,9 +500,13 @@ class TestSchemaCreation:
 
     def test_table_comments_exist(self, db_session):
         """Test that table comments are added."""
-        result = db_session.execute(text("""
+        result = db_session.execute(
+            text(
+                """
             SELECT obj_description('organizations'::regclass)
-            """))
+            """
+            )
+        )
         comment = result.scalar()
         assert comment is not None, "Organizations table should have a comment"
         assert "tenant" in comment.lower() or "b2b" in comment.lower()

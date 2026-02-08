@@ -1,10 +1,6 @@
-from typing import Dict, Any, Optional, Type
-from datetime import datetime
+from typing import Optional, Type
 import functools
 import time
-import logging
-from sqlalchemy.orm import Session
-from sqlalchemy.engine import Engine
 
 from ..config.database import DatabaseManager
 from .metrics_collector import MetricsCollector
@@ -178,9 +174,11 @@ class DatabaseMonitor:
                     )
                 else:
                     # Query overall storage
-                    result = session.execute("""
+                    result = session.execute(
+                        """
                         SELECT pg_database_size(current_database()) as used_bytes
-                    """)
+                    """
+                    )
 
                 used_bytes = result.scalar()
 

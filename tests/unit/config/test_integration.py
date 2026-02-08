@@ -14,7 +14,6 @@ from sqlalchemy import text
 from axai_pg.data.config.database import (
     DatabaseManager,
     PostgresConnectionConfig,
-    PostgresPoolConfig,
 )
 from axai_pg.data.config.environments import Environments
 
@@ -131,12 +130,16 @@ def test_transaction_isolation(integration_db_manager):
     """Test transaction isolation and rollback."""
     # Create a test table
     with integration_db_manager.session_scope() as session:
-        session.execute(text("""
+        session.execute(
+            text(
+                """
             CREATE TABLE IF NOT EXISTS test_transactions (
                 id SERIAL PRIMARY KEY,
                 value INTEGER
             )
-        """))
+        """
+            )
+        )
         session.commit()
 
     try:

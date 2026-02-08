@@ -1,7 +1,5 @@
 import pytest
-import os
-from axai_pg.data.config.settings import Settings, AppSettings
-from axai_pg.data.config.database import PostgresConnectionConfig
+from axai_pg.data.config.settings import Settings
 
 
 @pytest.fixture

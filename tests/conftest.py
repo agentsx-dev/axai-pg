@@ -1,11 +1,8 @@
 import os
 import pytest
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
-from sqlalchemy.orm import Session
-from sqlalchemy.exc import SQLAlchemyError
-from datetime import datetime
 import sys
 from pathlib import Path
 
@@ -58,7 +55,7 @@ def init_test_db(test_engine):
         from src.axai_pg.utils.schema_builder import PostgreSQLSchemaBuilder
 
         # Build complete schema with all PostgreSQL features
-        # If this fails, the exception will propagate and pytest will show the real error
+        # If this fails, the exception will propagate and pytest will show error
         PostgreSQLSchemaBuilder.build_complete_schema(test_engine)
 
         yield
@@ -77,8 +74,8 @@ def db_session(test_engine):
 
     connection = test_engine.connect()
     transaction = connection.begin()
-    Session = sessionmaker(bind=connection)
-    session = Session()
+    SessionFactory = sessionmaker(bind=connection)
+    session = SessionFactory()
 
     yield session
 

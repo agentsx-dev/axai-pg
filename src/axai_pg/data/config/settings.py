@@ -1,7 +1,7 @@
 from typing import Optional
 import os
 from dataclasses import dataclass
-from .database import PostgresConnectionConfig, PostgresPoolConfig
+from .database import PostgresConnectionConfig
 from .environments import Environments, EnvironmentConfig
 
 

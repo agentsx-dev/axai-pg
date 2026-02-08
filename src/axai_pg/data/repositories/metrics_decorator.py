@@ -36,7 +36,7 @@ def track_metrics(model_class: Type[T]):
             try:
                 result = await func(*args, **kwargs)
                 return result
-            except Exception as e:
+            except Exception:
                 error_occurred = True
                 raise
             finally:

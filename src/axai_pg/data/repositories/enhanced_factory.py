@@ -5,9 +5,8 @@ import threading
 from datetime import datetime
 from contextlib import contextmanager
 from .repository_metrics import RepositoryMetrics
-from .metrics_config import RepositoryMetricsConfig, MetricsProfile
+from .metrics_config import RepositoryMetricsConfig
 from .base_repository import BaseRepository
-from ..config.database import DatabaseManager
 from ..models.document import Document
 from .document_repository import DocumentRepository
 
@@ -147,18 +146,18 @@ class RepositoryFactory:
     def repository_session(self, model_class: Type[T]):
         """Context manager for repository operations with automatic metrics recording."""
         repository = self.get_repository(model_class)
-        model_map = {
+        model_map: Dict[Type[Document], str] = {
             Document: "document",
             # Add other model mappings as they're implemented
         }
-        repo_key = model_map[model_class]
+        repo_key = model_map[model_class]  # type: ignore[index]
 
         start_time = datetime.now()
         error_occurred = False
 
         try:
             yield repository
-        except Exception as e:
+        except Exception:
             error_occurred = True
             raise
         finally:

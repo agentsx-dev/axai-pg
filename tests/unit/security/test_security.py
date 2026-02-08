@@ -6,8 +6,6 @@ Run with: pytest tests/unit/security/test_security.py -v --integration
 """
 
 import pytest
-from datetime import datetime
-from sqlalchemy.orm import Session
 from axai_pg.data.models.security import UserRole, RolePermission, AuditLog, Role
 from axai_pg.data.models import User, Document, Organization
 

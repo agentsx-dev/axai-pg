@@ -1,7 +1,6 @@
 from typing import Dict, Any, Optional
 from datetime import datetime, timedelta, UTC
 import json
-import os
 from pathlib import Path
 import logging
 from logging.handlers import RotatingFileHandler
@@ -73,7 +72,9 @@ class MetricsCollector:
         )
         audit_logger.addHandler(audit_handler)
 
-    def log_query(self, query: str, duration: float, context: Dict[str, Any] = None):
+    def log_query(
+        self, query: str, duration: float, context: Optional[Dict[str, Any]] = None
+    ):
         """Log query execution with timing."""
         if duration > 1.0:  # Slow query threshold (1s)
             logging.getLogger("performance_logger").warning(
@@ -97,7 +98,7 @@ class MetricsCollector:
             "slow": duration > 1.0,
         }
 
-    def log_error(self, error: Exception, context: Dict[str, Any] = None):
+    def log_error(self, error: Exception, context: Optional[Dict[str, Any]] = None):
         """Log error with context."""
         logging.getLogger("error_logger").error(
             json.dumps(

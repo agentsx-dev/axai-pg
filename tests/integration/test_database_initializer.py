@@ -7,9 +7,7 @@ DatabaseManager.
 """
 
 import pytest
-import os
-from pathlib import Path
-from sqlalchemy import create_engine, text, inspect
+from sqlalchemy import create_engine, text
 
 from src.axai_pg.utils.db_initializer import (
     DatabaseInitializer,

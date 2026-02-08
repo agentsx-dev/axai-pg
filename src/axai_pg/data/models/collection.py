@@ -11,10 +11,9 @@ from sqlalchemy import (
     Table,
     Enum as SQLEnum,
 )
-from sqlalchemy.dialects.postgresql import UUID, JSONB, JSON
+from sqlalchemy.dialects.postgresql import UUID, JSON
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
-import uuid
 import enum
 from ..config.database import Base
 from .base import DualIdMixin
@@ -302,7 +301,10 @@ class CollectionEntity(DualIdMixin, Base):
     )
 
     def __repr__(self):
-        return f"<CollectionEntity(uuid={self.uuid}, id='{self.id}', entity_id='{self.entity_id}', name='{self.name}')>"
+        return (
+            f"<CollectionEntity(uuid={self.uuid}, id='{self.id}', "
+            f"entity_id='{self.entity_id}', name='{self.name}')>"
+        )
 
     def to_dict(self):
         """Convert to dictionary for JSON serialization."""
@@ -393,7 +395,11 @@ class CollectionRelationship(DualIdMixin, Base):
     )
 
     def __repr__(self):
-        return f"<CollectionRelationship(uuid={self.uuid}, id='{self.id}', collection_uuid={self.collection_uuid}, {self.source_entity_id} -> {self.target_entity_id})>"
+        return (
+            f"<CollectionRelationship(uuid={self.uuid}, id='{self.id}', "
+            f"collection_uuid={self.collection_uuid}, "
+            f"{self.source_entity_id} -> {self.target_entity_id})>"
+        )
 
     def to_dict(self):
         """Convert to dictionary for JSON serialization."""
@@ -571,7 +577,11 @@ class EntityLink(DualIdMixin, Base):
         ]
 
     def __repr__(self):
-        return f"<EntityLink(uuid={self.uuid}, id='{self.id}', graph_entity_uuid={self.graph_entity_uuid}, collection_entity_uuid={self.collection_entity_uuid})>"
+        return (
+            f"<EntityLink(uuid={self.uuid}, id='{self.id}', "
+            f"graph_entity_uuid={self.graph_entity_uuid}, "
+            f"collection_entity_uuid={self.collection_entity_uuid})>"
+        )
 
 
 class OperationType(enum.Enum):
@@ -669,7 +679,10 @@ class EntityOperation(DualIdMixin, Base):
         self.operation_data["rollback"] = data
 
     def __repr__(self):
-        return f"<EntityOperation(uuid={self.uuid}, id='{self.id}', operation_type={self.operation_type}, entity_id='{self.entity_id}')>"
+        return (
+            f"<EntityOperation(uuid={self.uuid}, id='{self.id}', "
+            f"operation_type={self.operation_type}, entity_id='{self.entity_id}')>"
+        )
 
 
 class DocumentCollectionContext(DualIdMixin, Base):
@@ -738,7 +751,11 @@ class DocumentCollectionContext(DualIdMixin, Base):
     )
 
     def __repr__(self):
-        return f"<DocumentCollectionContext(uuid={self.uuid}, id='{self.id}', document_uuid={self.document_uuid}, collection_uuid={self.collection_uuid})>"
+        return (
+            f"<DocumentCollectionContext(uuid={self.uuid}, id='{self.id}', "
+            f"document_uuid={self.document_uuid}, "
+            f"collection_uuid={self.collection_uuid})>"
+        )
 
 
 class VisibilityProfile(DualIdMixin, Base):

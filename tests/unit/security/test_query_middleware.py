@@ -10,7 +10,6 @@ requires a proper authentication context to be set up.
 """
 
 import pytest
-from sqlalchemy.orm import Session
 from axai_pg.data.models import User, Document, Organization
 
 
